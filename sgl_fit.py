@@ -80,3 +80,16 @@ Z =  np.ones([len(y),1])
 print(sgl_fit(X = x, Z = Z, y = y, index = index, lambdas =list(range(1,4)), gamma_w = None)['alphahat'] )
 print(sgl_fit(X = x, Z = Z, y = y, index = index, lambdas = list(range(1,4)), gamma_w = 1)['betahat'] )
 
+full_est=sgl_fit(X = x, Z = Z, y = y, index = index, lambdas =list(range(1,4)), gamma_w = 1)
+
+alpha_path = full_est['alphahat']
+beta_path = full_est['betahat']
+i=0
+tmp = lambda: None
+tmp.alpha = alpha_path.reshape(1,alpha_path.shape[1]*alpha_path.shape[0],order='F')[0,i]
+tmp.beta = beta_path[:,i] 
+
+object=tmp
+
+newX=x
+ 
