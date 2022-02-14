@@ -1,11 +1,15 @@
 # midasmlpy
 Python implementation of the midasml approach - providing **estimation** and **prediction** methods for high-dimensional mixed-frequency time-series data
 
+## Authors
+* Jonas Striaukas - [jstriaukas](https://github.com/jstriaukas)
+* Kris Stern - [slim-patchy](https://github.com/slim-patchy)
+
 ## About
 
 The *midasmlpy* package implements *estimation* and *prediction* methods for high-dimensional mixed-frequency (MIDAS) time-series and panel data in regression models. 
 The regularized MIDAS models are estimated using orthogonal (e.g. Legendre) polynomials and the sparse-group LASSO estimator. 
-For more information on the *midasmlpy* approach there are references in the footnotes [^1]. 
+For more information on the *midasmlpy* approach there are references in the footnotes[^1]. 
 
 The package is equipped with the fast implementation of the sparse-group LASSO estimator by means of proximal block coordinate descent. 
 High-dimensional mixed frequency time-series data can also be easily manipulated with functions provided in the package.
