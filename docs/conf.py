@@ -4,6 +4,8 @@
 # list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+from datetime import datetime
+
 # -- Path setup --------------------------------------------------------------
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -18,8 +20,8 @@
 # -- Project information -----------------------------------------------------
 
 project = 'midasmlpy'
-copyright = '2022, Jonas Striaukas, Kris Stern'
 author = 'Jonas Striaukas, Kris Stern'
+copyright = f'2022–{datetime.utcnow().year}, ' + author
 
 
 # -- General configuration ---------------------------------------------------
@@ -50,3 +52,11 @@ html_theme = 'bizstyle'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+
+# -- Other options -----------------------------------------------------------
+
+# Add any extra paths that contain custom files (such as robots.txt or
+# .htaccess) here, relative to this directory. These files are copied
+# directly to the root of the documentation.
+html_extra_path = ['robots.txt']
