@@ -1,4 +1,4 @@
-# SciPy imports
+# External imports
 import numpy as np
 import math
 
