@@ -1,0 +1,2 @@
+cd C:\Users\Utilisateur\Documents\GitHub\midasmlpy\midasmlpy
+python -m numpy.f2py -c sglfitF.f90 -m sglfitF
