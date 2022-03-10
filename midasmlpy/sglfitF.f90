@@ -1,24 +1,31 @@
 ! ------------------------------------------------------------------
 ! sglfitF.f90: block coordinate descent for sg-LASSO MSE regression.
 ! ------------------------------------------------------------------
-      SUBROUTINE sglfit(gamma, ngroups, gindex, nobs,
-     & nvars, x, y, pf, dfmax, pmax, nlam, flmin, ulam, eps, peps,
+      SUBROUTINE sglfit(gamma, ngroups, gindex, nobs, nvars,
+     &  x, y, pf, dfmax, pmax, nlam, flmin, ulam, eps, peps,
      & isd, intr, maxit, nalam, b0, beta, ibeta, nbeta, alam,
-     & npass, jerr)
+     & npass, jerr, ngrs, nobss, nvarss, nlams)
       
       IMPLICIT NONE
       ! -------- INPUT VARIABLES -------- !
-      Integer nobs, nvars, dfmax, pmax, nlam, isd, intr, ngroups, nalam
-      Integer maxit, npass, jerr
-      !Integer nbeta(nlam), ibeta(pmax)
-      !Integer gindex(ngroups)
-      Integer*4  nbeta(nlam), ibeta(pmax)
-      Integer*4  gindex(ngroups)
+	  Real*8, intent(in) :: gamma
+	  Integer, intent(in) :: ngroups, ngrs
+	  Integer*4, intent(inout) :: gindex(ngrs)
+	  
+      Integer, intent(in) :: nobs, nobss
+	  Integer, intent(in) :: nvars, dfmax, pmax, nlam
+	  Integer, intent(in) :: nvarss, nlams
+	  Integer, intent(in) :: isd, intr, maxit
+      Integer, intent(out) :: nalam, npass, jerr
+      Integer*4, intent(out) :: nbeta(nlam), ibeta(pmax)
+      
 
-      Real*8 flmin, eps, peps, gamma
-      Real*8 x(nobs, nvars), y(nobs), pf(nvars)
-      Real*8 b0(nlam), beta(pmax, nlam)
-      Real*8 alam(nlam), ulam(nlam) 
+      Real*8, intent(in) :: flmin, eps, peps
+      Real*8, intent(in) :: x(nobss, nvarss), y(nobss)
+	  Real*8, intent(inout) :: pf(nvarss)
+      Real*8, intent(out) :: b0(nlam), beta(pmax, nlam)
+      Real*8, intent(out) :: alam(nlam)
+	  Real*8, intent(in) :: ulam(nlams) 
 
 
       INTEGER j, l, nk, ierr
@@ -27,14 +34,14 @@
       Real*8, Dimension(:), Allocatable :: xnorm
       Real*8, Dimension(:), Allocatable :: maj
       
-      nalam=0
-      b0=0.d0
-      beta=0.d0
-      ibeta=0
-      nbeta=0
-      alam=0.d0
-      npass=0
-      jerr=0
+      nalam = 0
+      b0 = 0.D0
+      beta = 0.D0
+      ibeta = 0
+      nbeta = 0
+      alam = 0.D0
+      npass = 0
+      jerr = 0
       
       ALLOCATE(ju(1:nvars), Stat=ierr)
       jerr = jerr + ierr
