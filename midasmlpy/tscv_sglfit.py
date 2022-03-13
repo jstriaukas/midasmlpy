@@ -1,5 +1,6 @@
 import random
 import numpy as np
+import math
 import matplotlib.pyplot as plt
 from datetime import date
 import sglfitF
@@ -100,6 +101,7 @@ def sglfit(x, y, gamma, nlambda, method, nf, lamb_factor, lamb, pf, gindex, dfma
     nobs = np[0]
     nvars = np[1]
     ngroups = find_max(gindex)
+    # CHECK HERE - WHY V20? length(vnames) can be anything and depends on x
     vnames = ["V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8", "V9", "V10", "V11", "V12", "V13", "V14", "V15", "V16",
               "V17", "V18", "V19", "V20"]
     isd = int(standardize)
@@ -170,9 +172,17 @@ def sglfitpath(x, y, nlam, flmin, ulam, isd, intr, nf, eps, peps, dfmax, pmax, j
         print("only adjacent group memberships are allowed")
         quit()
     gindex = find_index(gindex)
+    ngroups = int(ngroups)
+    #gindex = int(gindex)
+    nobs = int(nobs)
+    dfmax= int(dfmax)
+    pmax = int(pmax)
+    isd = int(isd)
+    intr = int(intr)
+    maxit = int(maxit)
+    print(type(y))
     # call Fortran
     if nf == 0:   
-        print(type(gindex))
         nalam, b0, beta, ibeta, nbeta, alam, npass, jerr = sglfitF.sglfit(
             gamma, ngroups, gindex, nobs, nvars, x, y, pf, dfmax,
             pmax, nlam, flmin, ulam, eps, peps, isd, 
@@ -180,7 +190,17 @@ def sglfitpath(x, y, nlam, flmin, ulam, isd, intr, nf, eps, peps, dfmax, pmax, j
         nf = intr
     else:
          print("not yet implemented")
-        
+    
+    fit = []
+    fit.nalam = nalam
+    fit.b0 = b0
+    fit.beta = beta
+    fit.ibeta = ibeta
+    fit.nbeta = nbeta
+    fit.alam = alam
+    fit.npass = npass
+    fit.jerr = jerr
+    
     # output
     fit.nf = nf
     outlist = getoutput(fit, maxit, pmax, nvars, vnames)
@@ -467,8 +487,7 @@ def lambda_interp(lamb, s):
             lamb_set = list(range(1,len(lamb) + 1))
             
             
-import math
- 
+
 def lamfix(lam):
     llam = []
     for i in range(len(lam)):
@@ -476,7 +495,6 @@ def lamfix(lam):
     lam[0] = math.exp(math.pow(2, llam[1]) - llam[2])
     return lam
 
-import numpy as np
 
 def nonzero(beta, p, bystep = False):
     ns = np.shape(beta)[1]
