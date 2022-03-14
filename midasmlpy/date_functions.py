@@ -617,11 +617,11 @@ def mixed_freq_data_single(data_refdate, data_x, data_xdate, x_lag, horizon, est
     }
 
 if __name__ == "__main__":
-    with open("input_data_refdate.txt") as file_data_refdate:
+    with open("data_files/input_data_refdate.txt") as file_data_refdate:
         data_refdate = [line.rstrip() for line in file_data_refdate]
-    with open("input_data_x.txt") as file_data_x:
+    with open("data_files/input_data_x.txt") as file_data_x:
         data_x = [line.rstrip() for line in file_data_x]
-    with open("input_data_xdate.txt") as file_data_xdate:
+    with open("data_files/input_data_xdate.txt") as file_data_xdate:
         data_xdate = [line.rstrip() for line in file_data_xdate]
     x_lag = 12
     horizon = 1
