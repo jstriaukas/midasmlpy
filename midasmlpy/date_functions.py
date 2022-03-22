@@ -278,10 +278,16 @@ def mixed_freq_data(data_y, data_ydate, data_x, data_xdate, x_lag, y_lag, horizo
     data_xdate = is_na(data_xdate)
     data_ydate_vec = data_ydate
     data_ydate_vec = corr_datetype(data_ydate_vec)
-    data_ydate_vec = datetime.strptime(data_ydate_vec, '%Y-%m-%d %H:%M:%S')
+    for i in range(len(data_ydate_vec)):
+        data_ydate_vec[i] = datetime.strptime(data_ydate_vec[i], '%Y-%m-%d %H:%M:%S')
     data_xdate_vec = data_xdate
     data_xdate_vec = corr_datetype(data_xdate_vec)
-    data_xdate_vec = datetime.strptime(data_xdate_vec, '%Y-%m-%d %H:%M:%S')
+    for i in range(len(data_xdate_vec)):
+        data_xdate_vec[i] = datetime.strptime(data_xdate_vec[i], '%Y-%m-%d %H:%M:%S')
+    est_start = corr_datetype(est_start)
+    est_start = datetime.strptime(est_start[0], '%Y-%m-%d %H:%M:%S')
+    est_end = corr_datetype(est_end)
+    est_end = datetime.strptime(est_end[0], '%Y-%m-%d %H:%M:%S')
     data_xdate_vec = date_vec(data_xdate_vec)
     data_ydate_vec = date_vec(data_ydate_vec)
     data_ydate_num = data_ydate
@@ -331,17 +337,17 @@ def mixed_freq_data(data_y, data_ydate, data_x, data_xdate, x_lag, y_lag, horizo
             est_end = max_date
     tol = 1e-10
     for i in range(len(data_ydate_num)):
-        if data_ydate_num[i] >= est_start - tol:
+        if data_ydate_num[i] >= est_start:
             loc_start = i
             break
     for i in range(len(data_ydate_num)):
-        if data_ydate_num[i] >= est_end - tol:
+        if data_ydate_num[i] >= est_end:
             loc_end = i
             break
     est_y = data_y[loc_start : loc_end]
     est_ydate = data_ydate_num[loc_start : loc_end]
     for i in range(len(data_ydate_num)):
-        if data_ydate_num[i] >= max_date - tol:
+        if data_ydate_num[i] >= max_date:
             loc_forecast_end = i
             break
     if loc_end + 1 <= loc_forecast_end:
@@ -351,25 +357,25 @@ def mixed_freq_data(data_y, data_ydate, data_x, data_xdate, x_lag, y_lag, horizo
     else:
         out_y, out_ydate = None
         n_forecast = 0
-    nobs = loc_end - loc_start + 1
+    nobs = loc_end - loc_start
     est_lag_y = [[None for x in range(y_lag)] for y in range(nobs)]
     est_lag_ydate = [[None for x in range(y_lag)] for y in range(nobs)]
     for m in range(y_lag):
-        est_lag_y[:][m] = data_y[loc_start - m - 1, loc_end - m]
-        est_lag_ydate[:][m] = data_ydate_num[loc_start - m - 1, loc_end - m]
+        est_lag_y[:][m] = data_y[loc_start - m - 1:loc_end - m]
+        est_lag_ydate[:][m] = data_ydate_num[loc_start - m - 1:loc_end - m]
     if loc_end + 1 <= loc_forecast_end:
         out_lag_y = [[None for x in range(y_lag)] for y in range(n_forecast)]
         out_lag_ydate = [[None for x in range(y_lag)] for y in range(n_forecast)]
         for m in range(y_lag):
-            out_lag_y[:][m] = data_y[loc_end - m, loc_forecast_end - m - 1]
-            out_lag_ydate[:][m] = data_ydate_num[loc_end - m, loc_forecast_end - m - 1]
+            out_lag_y[:][m] = data_y[loc_end - m:loc_forecast_end - m - 1]
+            out_lag_ydate[:][m] = data_ydate_num[loc_end - m:loc_forecast_end - m - 1]
     else:
         out_lag_y, out_lag_ydate = None
     est_x = [[None for x in range(y_lag)] for y in range(nobs)]
     est_xdate = [[None for x in range(y_lag)] for y in range(nobs)]
     for t in range(nobs):
         for i in range(len(data_xdate_num)):
-            if data_xdate_num[i] >= est_ydate[t] - tol:
+            if data_xdate_num[i] >= est_ydate[t]:
                 loc = i
                 break
         if loc == None:
@@ -390,10 +396,10 @@ def mixed_freq_data(data_y, data_ydate, data_x, data_xdate, x_lag, y_lag, horizo
             est_xdate[t][:] = data_xdate_num[loc - horizon - 1 : loc -horizon - x_lag : -1]
     if loc_end + 1 <= loc_forecast_end:
         out_x = [[None for x in range(x_lag)] for y in range(n_forecast)]
-        outxdate = [[None for x in range(x_lag)] for y in range(n_forecast)]
+        out_xdate = [[None for x in range(x_lag)] for y in range(n_forecast)]
         for t in range(n_forecast):
             for i in range(len(data_xdate_num)):
-                if data_xdate_num[i] >= out_ydate[t] - tol:
+                if data_xdate_num[i] >= out_ydate[t]:
                     loc = i
                     break
             if loc is None:
@@ -616,16 +622,34 @@ def mixed_freq_data_single(data_refdate, data_x, data_xdate, x_lag, horizon, est
         "max_date": max_date,
     }
 
-if __name__ == "__main__":
-    with open("data_files/input_data_refdate.txt") as file_data_refdate:
-        data_refdate = [line.rstrip() for line in file_data_refdate]
-    with open("data_files/input_data_x.txt") as file_data_x:
-        data_x = [line.rstrip() for line in file_data_x]
-    with open("data_files/input_data_xdate.txt") as file_data_xdate:
-        data_xdate = [line.rstrip() for line in file_data_xdate]
-    x_lag = 12
-    horizon = 1
-    est_start = ["1990-01-01"]
-    est_end = ["2002-03-01"]
-    result = mixed_freq_data_single(data_refdate, data_x, data_xdate, x_lag, horizon, est_start, est_end, disp_flag = True)
-    print(result)
+#if __name__ == "__main__":
+#    with open("data_files/input_data_refdate.txt") as file_data_refdate:
+#        data_refdate = [line.rstrip() for line in file_data_refdate]
+#    with open("data_files/input_data_x.txt") as file_data_x:
+#        data_x = [line.rstrip() for line in file_data_x]
+#    with open("data_files/input_data_xdate.txt") as file_data_xdate:
+#        data_xdate = [line.rstrip() for line in file_data_xdate]
+#    x_lag = 12
+#    horizon = 1
+#    est_start = ["1990-01-01"]
+#    est_end = ["2002-03-01"]
+#    result = mixed_freq_data_single(data_refdate, data_x, data_xdate, x_lag, horizon, est_start, #est_end, disp_flag = True)
+#    print(result)
+
+#if __name__ == "__main__":
+#    with open("input_data_x.txt") as file_data_x:
+#        data_x = [line.rstrip() for line in file_data_x]
+#    with open("input_data_xdate.txt") as file_data_xdate:
+#        data_xdate = [line.rstrip() for line in file_data_xdate]
+#    with open("input_data_y.txt") as file_data_x:
+#        data_y = [line.rstrip() for line in file_data_x]
+#    with open("input_data_ydate.txt") as file_data_xdate:
+#        data_ydate = [line.rstrip() for line in file_data_xdate]
+#    x_lag = 12
+#    y_lag = 1
+#    horizon = 1
+#    est_start = ["1990-01-01"]
+#    est_end = ["2002-03-01"]
+#    result = mixed_freq_data(data_y, data_ydate, data_x, data_xdate, x_lag, y_lag, horizon, #est_start, est_end, disp_flag = True)
+    
+ #   print(result)
