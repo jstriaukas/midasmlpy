@@ -1,4 +1,4 @@
-#setwd("~/Documents/GitHub/midasmlpy/R_test")
+setwd("~/Documents/GitHub/midasmlpy/R_test")
 #install.packages("midasml")
 library(midasml)
 
@@ -12,6 +12,10 @@ standardize = FALSE
 intercept = TRUE
 seed = 1234
 K = 99
+
+write.table(x, file = "input_x.txt", append = FALSE, sep = " ", dec = ".", row.names = FALSE, col.names = FALSE)
+write.table(y, file = "input_y.txt", append = FALSE, sep = " ", dec = ".", row.names = FALSE, col.names = FALSE)
+
 solution <- tscv.sglfit(x = x, y = y, gindex = gindex, gamma = gamma, standardize = standardize, intercept = intercept, seed = seed, K = K)
 save(x, y, gindex, gamma, standardize, intercept, seed, K, file = 'input.RData')
 save(solution, file = 'output.RData')

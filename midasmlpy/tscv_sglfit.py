@@ -145,8 +145,15 @@ def sglfit(x, y, gamma, nlambda, method, nf, lamb_factor, lamb, pf, gindex, dfma
         ulam = ulam.sort()
 
     #################################################################################
+
+    print("fit = sglfitpath")
+    
     fit = sglfitpath(x, y, nlam, flmin, ulam, isd, intr, nf, eps, peps, dfmax, pmax, jd,
                pf, gindex, ngroups, maxit, gamma, nobs, nvars, vnames)
+
+    print(fit)
+    print("after")
+
     return fit
 
 # def sglfitF(gamma, ngroups, gindex, nobs, nvars, x, y, pf, dfmax, pmax, nlam, flmin, ulam, eps, peps,
@@ -180,17 +187,37 @@ def sglfitpath(x, y, nlam, flmin, ulam, isd, intr, nf, eps, peps, dfmax, pmax, j
     isd = int(isd)
     intr = int(intr)
     maxit = int(maxit)
-    print(type(y))
-    # call Fortran
     if nf == 0:   
+        print("before fortran")
         nalam, b0, beta, ibeta, nbeta, alam, npass, jerr = sglfitF.sglfit(
             gamma, ngroups, gindex, nobs, nvars, x, y, pf, dfmax,
             pmax, nlam, flmin, ulam, eps, peps, isd, 
-            intr, maxit, pmax)
+            intr, maxit)
+        print("after fortran",intr)
         nf = intr
+        #print(" nf=",nf)
+
+        print("nalam:",nalam)
+        print("b0:",b0)
+        print("beta:",beta)
+        print("ibeta:",ibeta)
+        print("nbeta:",nbeta)
+        print("alam:",alam)
+        print("npass:",npass)
+        print("jerr:",jerr)
+
+
+
+
+
+        
     else:
          print("not yet implemented")
     
+
+    print("assign fit:")
+
+         
     fit = []
     fit.nalam = nalam
     fit.b0 = b0
@@ -201,12 +228,20 @@ def sglfitpath(x, y, nlam, flmin, ulam, isd, intr, nf, eps, peps, dfmax, pmax, j
     fit.npass = npass
     fit.jerr = jerr
     
+
+    print("fit assigned:")
+
+    
     # output
-    fit.nf = nf
+    #fit.nf = nf
     outlist = getoutput(fit, maxit, pmax, nvars, vnames)
     update_out = {"npasses": fit["npass"], "jerr": fit["jerr"]}
     outlist.update(update_out)
     outlist["dimx"] = [nobs, nvars]
+
+
+    #print("outlist:",outlist)
+
     return outlist
 # Updated
 def predict_sglpath(object, newx, me = "single", s = None):
@@ -616,11 +651,30 @@ def find_ordered_index(x):
 
 if __name__ == "__main__":
     random.seed(123)
-    x = np.random.rand(100, 20)
-    x = np.asmatrix(x)
+#    x = np.random.rand(100, 20)
+#    x = np.asmatrix(x)
+    with open("input_x.txt") as datx:
+        strx=datx.read()
+    xx=np.fromstring(strx, dtype=float, sep=' ')
+    x=np.reshape(xx,(100,20))
+#    print(x)
+#    print(len(x))
+
+
     beta = [[5], [4], [3], [2], [1], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]]
     beta = np.asmatrix(beta)
-    y = x * beta
+#    y = x * beta
+
+    with open("input_y.txt") as daty:
+        stry=daty.read()
+    y=np.fromstring(stry, dtype=float, sep=' ')
+
+#    print(y)
+#    print(len(y))
+
+
+
+
     gindex = [1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4]
     gindex = np.asmatrix(gindex)
     gindex = np.squeeze(np.asarray(gindex))
