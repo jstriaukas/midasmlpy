@@ -1,48 +1,78 @@
 ! ------------------------------------------------------------------
 ! sglfitF.f90: block coordinate descent for sg-LASSO MSE regression.
 ! ------------------------------------------------------------------
-      SUBROUTINE sglfit(gamma, ngroups, gindex, nobs, nvars,
-     &  x, y, pf, dfmax, pmax, nlam, flmin, ulam, eps, peps,
-     & isd, intr, maxit, nalam, b0, beta, ibeta, nbeta, alam,
-     & npass, jerr, ngrs, nobss, nvarss, nlams)
-      
+!#      SUBROUTINE sglfit(gamma, ngroups, gindex, nobs, nvars,
+!#     &  x, y, pf, dfmax, pmax, nlam, flmin, ulam, eps, peps,
+!#     & isd, intr, maxit, nalam, b0, beta, ibeta, nbeta, alam,
+!#     & npass, jerr, ngrs, nobss, nvarss, nlams)
+
+SUBROUTINE sglfit(gamma,ngroups,gindex,nobs,nvars,&
+     x, y, pf,dfmax, pmax, nlam,flmin, ulam, eps, peps,&
+     isd, intr, maxit, nalam, b0, beta, ibeta, nbeta, alam,&
+     npass,jerr)
+
+  
       IMPLICIT NONE
       ! -------- INPUT VARIABLES -------- !
-	  Real*8, intent(in) :: gamma
-	  Integer, intent(in) :: ngroups, ngrs
-	  Integer*4, intent(inout) :: gindex(ngrs)
+      Real*8, intent(in) :: gamma
+      Integer, intent(in) :: ngroups!, ngrs
+      !   Integer*4, intent(inout) :: gindex(ngrs)
+      Integer*4, intent(in) :: gindex(:)
 	  
-      Integer, intent(in) :: nobs, nobss
-	  Integer, intent(in) :: nvars, dfmax, pmax, nlam
-	  Integer, intent(in) :: nvarss, nlams
-	  Integer, intent(in) :: isd, intr, maxit
-      Integer, intent(out) :: nalam, npass, jerr
-      Integer*4, intent(out) :: nbeta(nlam), ibeta(pmax)
-      
-
-      Real*8, intent(in) :: flmin, eps, peps
-      Real*8, intent(in) :: x(nobss, nvarss), y(nobss)
-	  Real*8, intent(inout) :: pf(nvarss)
-      Real*8, intent(out) :: b0(nlam), beta(pmax, nlam)
-      Real*8, intent(out) :: alam(nlam)
-	  Real*8, intent(in) :: ulam(nlams) 
+      Integer, intent(in) :: nobs!#, nobss
+      Integer, intent(in) :: nvars, dfmax, pmax, nlam
+      !	  Integer, intent(in) :: nvarss, nlams
+   Integer, intent(in) :: isd, intr, maxit
+   Integer, intent(out) :: nalam, npass, jerr
+   Integer*4, intent(out) :: nbeta(nlam), ibeta(pmax)
 
 
-      INTEGER j, l, nk, ierr
-      INTEGER, Dimension(:), Allocatable :: ju
-      Real*8, Dimension(:), Allocatable :: xmean
-      Real*8, Dimension(:), Allocatable :: xnorm
-      Real*8, Dimension(:), Allocatable :: maj
-      
-      nalam = 0
-      b0 = 0.D0
-      beta = 0.D0
-      ibeta = 0
-      nbeta = 0
-      alam = 0.D0
-      npass = 0
-      jerr = 0
-      
+   Real*8, intent(in) :: flmin, eps, peps
+   !      Real*8, intent(in) :: x(nobss, nvarss), y(nobss)
+   Real*8, intent(in) :: x(:, :), y(:)
+   !	  Real*8, intent(inout) :: pf(nvarss)
+   Real*8, intent(in) :: pf(:)
+   Real*8, intent(out) :: b0(nlam), beta(pmax, nlam)
+   Real*8, intent(out) :: alam(nlam)
+   !	  Real*8, intent(in) :: ulam(nlams)
+   Real*8, intent(in) :: ulam(:)
+   Real*8  ulam_(nlam)
+
+
+   INTEGER j, l, nk, ierr
+   INTEGER, Dimension(:), Allocatable :: ju
+   Real*8, Dimension(:), Allocatable :: xmean
+   Real*8, Dimension(:), Allocatable :: xnorm
+   Real*8, Dimension(:), Allocatable :: maj
+   Real*8, Dimension(:), Allocatable :: pf_
+
+   real*8 maxlam,tmp
+
+   
+!!$   print*,"Hello from fortran"
+!!$   print*," gamma,ngroups:",gamma,ngroups
+!!$   print*," gindex:",gindex
+!!$   print*," nobs,nvars",nobs,nvars
+!!$   print*," x:",x
+!!$   print*," y:",y
+!!$   print*,' pf:',pf
+!!$   print*
+!!$   print*," dfmax,pmax,nlam:",dfmax,pmax,nlam
+!!$   print*,"flmin, eps, peps:",flmin, eps, peps
+!!$   print*," ulam:",ulam
+!!$   print*,"isd, intr, maxit:",isd, intr, maxit
+
+   nalam = 0
+   b0 = 0.D0
+   beta = 0.D0
+   ibeta = 0
+   nbeta = 0
+   alam = 0.D0
+   npass = 0
+   jerr = 0
+   ulam_=ulam
+
+   
       ALLOCATE(ju(1:nvars), Stat=ierr)
       jerr = jerr + ierr
       ALLOCATE(xmean(1:nvars), Stat=ierr)
@@ -53,23 +83,47 @@
       jerr = jerr + ierr
       If (jerr /= 0) Return
       Call chkvars(nobs, nvars, x, ju)
+
+      !by
+      allocate(pf_(size(pf)))
+      !by
+      !print*,"size of pf:", size(pf)
+
       If (maxval(pf) <= 0.0D0) Then
           jerr = 10000
           Return
       End If
-      pf = max(0.0D0, pf)
-      
+      !      pf = max(0.0D0, pf)
+      pf_ = max(0.0D0, pf)
 
-      
+
       Call standard(nobs, nvars, x, ju, isd, intr, xmean, xnorm, maj)
+
+
+
+      !--- HERE ADDED --- !
+      ! -------------------- COMPUTE LAMBDA --------------------- !
+      If (ulam(1) .EQ. -1.0D0) Then
+        Call maxlambda(nvars, nobs, x, y, gamma, gindex, ngroups, pf, maxlam)
+        ulam_(1) = maxlam
+        Do j = 2, nlam
+            tmp = LOG(maxlam) + (LOG(maxlam*flmin) - LOG(maxlam)) * (j - 1) / (nlam - 1)
+            ulam_(j) = EXP(tmp)
+        End Do
+      End If
+      !--- HERE ENDED --- !
+
+
+
+
       If (gamma == 1.0D0) Then
-          Call lassofitpathF(maj, nobs, nvars, x, y, ju, pf, dfmax,
-     & pmax, nlam, flmin, ulam, eps, maxit, nalam, b0, beta, ibeta,
-     & nbeta, alam, npass, jerr, intr)
+          Call lassofitpathF(maj, nobs, nvars, x, y, ju, pf, dfmax,&
+               pmax, nlam, flmin, ulam_, eps, maxit, nalam, b0, beta, ibeta,&
+               nbeta, alam, npass, jerr, intr)
       Else
-          Call sglfitpathF(maj, gamma, ngroups, gindex, nobs, nvars,
-     & x, y, ju, pf, dfmax, pmax, nlam, flmin, ulam, eps, peps, maxit, 
-     & nalam, b0, beta, ibeta, nbeta, alam, npass, jerr, intr)
+          Call sglfitpathF(maj, gamma, ngroups, gindex, nobs, nvars,&
+               x, y, ju, pf, dfmax, pmax, nlam, flmin, ulam_, eps, peps, maxit,& 
+               nalam, b0, beta, ibeta, nbeta, alam, npass, jerr, intr)
       End If
       If (jerr > 0) Return
       
@@ -91,10 +145,10 @@
       
       
       
-      SUBROUTINE sglfitpathF(maj, gamma, ngroups, gindex,
-     & nobs, nvars, x, y, ju, pf, dfmax, pmax, nlam, flmin,
-     & ulam, eps, peps, maxit, nalam, b0, beta, m, nbeta,
-     & alam, npass, jerr, intr)
+      SUBROUTINE sglfitpathF(maj, gamma, ngroups, gindex,&
+           nobs, nvars, x, y, ju, pf, dfmax, pmax, nlam, flmin,&
+           ulam, eps, peps, maxit, nalam, b0, beta, m, nbeta,&
+           alam, npass, jerr, intr)
       IMPLICIT NONE
       INTEGER mnl, nobs, nvars, dfmax, pmax, nlam, maxit
       INTEGER nalam, npass, jerr, intr, ngroups
@@ -170,8 +224,8 @@
                 skip = 0
               End If
               If (skip == 0) Then
-                    Call prox_sgl(gstart, gend, nvars, nobs, x,
-     & r, b(1:nvars), al, gamma, pf, peps, gw)
+                    Call prox_sgl(gstart, gend, nvars, nobs, x,&
+                         r, b(1:nvars), al, gamma, pf, peps, gw)
                 Do g = gstart, gend
                   If (abs(b(g))>0.0D0) Then
                     If (pln == 1) Then
@@ -244,9 +298,9 @@
 
 
 
-      SUBROUTINE lassofitpathF(maj, nobs, nvars, x, y, ju, pf,
-     & dfmax, pmax, nlam, flmin, ulam, eps, maxit, nalam, b0, 
-     & beta, m, nbeta, alam, npass, jerr, intr)
+      SUBROUTINE lassofitpathF(maj, nobs, nvars, x, y, ju, pf,&
+           dfmax, pmax, nlam, flmin, ulam, eps, maxit, nalam, b0,&
+           beta, m, nbeta, alam, npass, jerr, intr)
       
       IMPLICIT NONE
       ! -------- INPUT VARIABLES -------- !
@@ -407,8 +461,8 @@
 
 
 
-      SUBROUTINE prox_sgl(gstart, gend, nvars, nobs, x, r,
-     & b, al, gamma, pf, peps, gw)
+      SUBROUTINE prox_sgl(gstart, gend, nvars, nobs, x, r,&
+           b, al, gamma, pf, peps, gw)
       IMPLICIT NONE
       ! -------- INPUT VARIABLES -------- !
       INTEGER gstart, gend, nvars, nobs
@@ -454,13 +508,13 @@
       End Do
       End SUBROUTINE prox_sgl
 
-      SUBROUTINE standard(nobs, nvars, x, ju, isd, intr,
-     & xmean, xnorm, maj)     
+      SUBROUTINE standard(nobs, nvars, x, ju, isd, intr,&
+           xmean, xnorm, maj)     
       IMPLICIT NONE
       ! -------- INPUT VARIABLES -------- !
       INTEGER nobs, nvars, isd, intr, ju(nvars)
       Real*8 x(nobs, nvars), xmean(nvars)
-      Real*8xnorm(nvars), maj(nvars)
+      Real*8 xnorm(nvars), maj(nvars)
       ! -------- LOCAL DECLARATIONS -------- !
       INTEGER j
       Real*8 xmsq, xvar
@@ -516,3 +570,131 @@
       END DO
       END DO
       END SUBROUTINE chkvars
+
+
+
+
+
+    SUBROUTINE maxlambda(nvars, nobs, x, y, gamma, gindex, ngroups, pf, maxlam)
+
+        IMPLICIT NONE
+        ! -------- INPUT VARIABLES -------- !
+        INTEGER :: nvars, nobs, ngroups, gindex(ngroups)
+        DOUBLE PRECISION :: x(nobs,nvars), y(nobs), pf(nvars), gamma, maxlam
+        ! -------- LOCAL DECLARATIONS -------- !
+        INTEGER :: k, c, nzvars
+        INTEGER :: gstart, gend, gs, gj
+        DOUBLE PRECISION :: gw, xy(nvars), r(nobs)
+        DOUBLE PRECISION :: wmaxg(ngroups), lb, rb
+
+        ! -------- BEGIN PROGRAM -------- !
+        c = 0
+        r = y
+        nzvars = 0
+        DO k = 1, nvars
+            IF (pf(k) .EQ. 0.0D0) THEN
+            nzvars = nzvars + 1
+            END IF
+        END DO
+        IF (nzvars .NE. 0) THEN
+            !CALL rnz(nvars, nobs, nzvars, y, x, r, pf)
+        END IF
+        xy = MATMUL(TRANSPOSE(x),r)/nobs
+
+
+        IF (gamma .EQ. 1.0D0) THEN
+            maxlam = MAXVAL(ABS(xy))
+        ELSE
+            DO k = 1, ngroups
+                gend = gindex(k)
+                IF (k == 1) THEN
+                    gstart = 1
+                ELSE
+                    gstart = gindex(k-1) + 1
+                END IF
+                gs = gend - gstart + 1
+                gw = 0.0D0
+                DO gj = gstart, gend
+                    gw = gw + pf(gj)
+                END DO
+                gw = SQRT(gw)
+                IF (gw == 0.0D0) THEN
+                    wmaxg(k) = 0.0D0
+                ELSE
+                    IF (gamma .EQ. 0.0D0) THEN
+                        !rb = NORM2(xy(gstart:gend))
+                        rb = SQRT(DOT_PRODUCT(xy(gstart:gend), xy(gstart:gend)))
+                        wmaxg(k) = rb/gw
+                    ELSE
+                        lb = 0.0D0
+                        rb = MAXVAL(ABS(xy(gstart:gend)))/gamma
+                        CALL solvewmaxg(gstart, gend, gamma, lb, rb, gw, pf, xy, nvars)
+                        wmaxg(k) = rb
+                    END IF
+                END IF
+            END DO
+            maxlam = MAXVAL(wmaxg)
+        END IF
+        !--- ADD SMALL NUMBER TO ENSURE b = 0 @ maxlam (DUE TO NUMERICAL IMPRESSION)
+        maxlam = maxlam + 1E-5
+
+    END SUBROUTINE maxlambda
+
+
+    SUBROUTINE  solvewmaxg(gstart, gend, gamma, lb, rb, gw, pf, xy, nvars)
+        IMPLICIT NONE
+        ! -------- INPUT VARIABLES -------- !
+        INTEGER :: gstart, gend, nvars
+        DOUBLE PRECISION :: gamma, lb, rb, gw, pf(nvars), xy(nvars)
+        ! -------- LOCAL DECLARATIONS -------- !
+        INTEGER :: stopflag, indexi
+        DOUBLE PRECISION ::  tol = 1E-13, mp, fl, fm, fr, tmpl, tmpm, tmpr
+
+        stopflag = 0
+        DO
+            mp = 0.5 * (lb + rb)
+            fl = 0.0D0
+            fm = 0.0D0
+            fr = 0.0D0
+            tmpl = 0.0D0
+            tmpm = 0.0D0
+            tmpr = 0.0D0
+            DO indexi =  gstart, gend
+                tmpl = ABS(xy(indexi)) - gamma * lb * pf(indexi)
+                tmpm = ABS(xy(indexi)) - gamma * mp * pf(indexi)
+                tmpr = ABS(xy(indexi)) - gamma * rb * pf(indexi)
+                IF (tmpl > 0.0D0) THEN
+                    fl = fl + tmpl * tmpl
+                END IF
+                IF (tmpm > 0.0D0) THEN
+                    fm = fm + tmpm * tmpm
+                END IF
+                IF (tmpr > 0.0D0) THEN
+                    fr = fr + tmpr * tmpr
+                END IF
+            END DO
+            fl = fl - (1.0D0 - gamma) * (1.0D0 - gamma) * lb * lb * gw * gw
+            fm = fm - (1.0D0 - gamma) * (1.0D0 - gamma) * mp * mp * gw * gw
+            fr = fr - (1.0D0 - gamma) * (1.0D0 - gamma) * rb * rb * gw * gw
+            IF (fl * fm < 0.0D0) THEN
+                IF (ABS(lb - mp) > tol) THEN
+                    rb = mp
+                ELSE
+                    stopflag = 1
+                END IF
+            ELSE
+                IF (fm * fr < 0.0D0) THEN
+                    IF (ABS(mp - rb) > tol) THEN
+                        lb = mp
+                    ELSE
+                        stopflag = 1
+                    END IF
+                ELSE
+                    stopflag = 1
+                END IF
+            END IF
+           IF (stopflag .EQ. 1) EXIT
+        END DO
+        rb = mp
+
+    END SUBROUTINE solvewmaxg
