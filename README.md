@@ -20,6 +20,13 @@ High-dimensional mixed frequency time-series data can also be easily manipulated
 - MATLAB implmentation of the midasml method is available [here](https://github.com/jstriaukas/midasml_mat).
 - R implementation of the midasml method is available [here](https://github.com/jstriaukas/midasml).
 
+## Details on the Fortran code
+
+The main subroutines are written in Fortran 90. The code is compiled for several OS: 
+
+- sglfitF.cpython-38-x86_64-linux-gnu.so - compiled for Linux. Version: 20.04.4. Compiled with f2py3 and gfortran compiler.
+- sglfitF.cp37-win_amd64.pyd - compiled for Windows. Version: Windows 10. Compiled with f2py and gfortran compiler.
+
 [^1]: Babii, A., Ghysels, E., & Striaukas, J. (2021). Machine learning time series regressions with an application to nowcasting. 
 Journal of Business & Economic Statistics, 1-23.
 Now available at https://doi.org/10.1080/07350015.2021.1899933.
