@@ -27,7 +27,7 @@ The main subroutines are written in Fortran 90. The code is compiled for several
 - sglfitF.cpython-38-x86_64-linux-gnu.so - compiled for Linux. Version: 20.04.4. Compiled with f2py3 and gfortran compiler.
 - sglfitF.cp37-win_amd64.pyd - compiled for Windows. Version: Windows 10. Compiled with f2py and gfortran compiler.
 
-In case you are running the code on a different platform, you can compile the Fortran code *sglfitF.f90* by using *f2py* which is part of *numpy*. 
+In case you are running the code on a different platform, you can compile the Fortran code  <tt>sglfitF.f90 </tt> by using  <tt>f2py</tt> which is part of  <tt>numpy</tt>. 
 
 [^1]: Babii, A., Ghysels, E., & Striaukas, J. (2021). Machine learning time series regressions with an application to nowcasting. 
 Journal of Business & Economic Statistics, 1-23.
