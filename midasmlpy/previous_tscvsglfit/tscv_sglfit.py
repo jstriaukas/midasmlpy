@@ -216,44 +216,26 @@ def sglfitpath(x, y, nlam, flmin, ulam, isd, intr, nf, eps, peps, dfmax, pmax, j
     
 
     print("assign fit:")
-    
-    class new_class():
-        def __init__(self):
-            self.nalam = nalam
-            self.b0 = b0
-            self.beta = beta
-            self.ibeta = ibeta
-            self.nbeta = nbeta
-            self.alam = alam
-            self.npass = npass
-            self.jerr = jerr
-            self.a0 = ""
-            self.nf = ""
-            self.theta = ""
-            
-            
-    
-    fit = new_class()
-    
-# =============================================================================
-#     fit = []
-#     fit.nalam = nalam
-#     fit.b0 = b0
-#     fit.beta = beta
-#     fit.ibeta = ibeta
-#     fit.nbeta = nbeta
-#     fit.alam = alam
-#     fit.npass = npass
-#     fit.jerr = jerr
-# =============================================================================
+
+         
+    fit = []
+    fit.nalam = nalam
+    fit.b0 = b0
+    fit.beta = beta
+    fit.ibeta = ibeta
+    fit.nbeta = nbeta
+    fit.alam = alam
+    fit.npass = npass
+    fit.jerr = jerr
     
 
     print("fit assigned:")
 
+    
     # output
     #fit.nf = nf
     outlist = getoutput(fit, maxit, pmax, nvars, vnames)
-    update_out = {"npasses": fit.npass, "jerr": fit.jerr}
+    update_out = {"npasses": fit["npass"], "jerr": fit["jerr"]}
     outlist.update(update_out)
     outlist["dimx"] = [nobs, nvars]
 
@@ -346,12 +328,12 @@ def tscv_sglpath(outlist, lamb, x, y, foldid):
     return {'cvm' : cvm, 'cvsd' : cvsd, 'typenames' : typenames}
 # Updated
 def getoutput(fit, maxit, pmax, nvars, vnames):
-    nalam = fit.nalam
-    nbeta = get_array_by_index(fit.alam, nalam)
+    nalam = fit["nalam"]
+    nbeta = get_array_by_index(fit["alam"], nalam)
     nbetamax = find_max(nbeta)
-    lam = get_array_by_index(fit.alam, nalam)
+    lam = get_array_by_index(fit["alam"], nalam)
     stepnames = get_step_names("s", nalam - 1)
-    n, errmsg = err(fit.jerr, maxit, pmax)
+    n, errmsg = err(fit["jerr"], maxit, pmax)
     if n == 1:
         print(errmsg)
         quit()
@@ -359,18 +341,18 @@ def getoutput(fit, maxit, pmax, nvars, vnames):
         print(errmsg)
     dd = [nvars, nalam]
     if nbetamax > 0:
-        beta = find_beta(fit.beta, pmax, nalam, nbetamax)
+        beta = find_beta(fit["beta"], pmax, nalam, nbetamax)
         df_beta = []
-        for i in range(len(beta)):
+        for i in range(len(beta)[1]):
             sum = 0
-            for j in range(len(beta)):
+            for j in range(len(beta)[0]):
                 if beta[j][i] < 0:
                     beta[j][i] = abs(beta[j][i])
                 sum += beta[j][i]
             df_beta.append(sum)
         ja = []
-        for i in range(int(nbetamax)):
-            ja.append(fit.ibeta[i])
+        for i in range(nbetamax):
+            ja.append(fit["ibeta"][i])
         unit = [1] * len(ja)
         oja = np.argsort(ja) + unit
         ja = [ja[i - 1] for i in oja]
@@ -381,19 +363,19 @@ def getoutput(fit, maxit, pmax, nvars, vnames):
     else:
         beta = np.zeros([nvars, nalam])
         df_beta = [0] * nalam
-    b0 = fit.b0
+    b0 = fit["b0"]
     if b0 is None:
         b0 = get_array_by_index(nalam)
-    a0 = fit.a0
-    nf = fit.nf
+    a0 = fit["a0"]
+    nf = fit["nf"]
     if a0 is False:
         a0 = np.full((nf, nalam), a0)
-    if fit.theta is None:
+    if fit["theta"] is None:
         ntheta = get_array_by_index(ntheta, nalam)
         nthetamax = find_max(ntheta)
         if nthetamax > 0:
-            theta = find_beta(fit.theta, pmax, nalam, nthetamax)
-            ja = get_array_by_index(fit.itheta, nthetamax)
+            theta = find_beta(fit["theta"], pmax, nalam, nthetamax)
+            ja = get_array_by_index(fit["itheta"], nthetamax)
             unit = [1] * len(ja)
             oja = np.argsort(ja) + unit
             ja = [ja[i - 1] for i in oja]
@@ -628,11 +610,8 @@ def get_step_names(str1, step):
 
 def get_array_by_index(x, index):
     arr = []
-    try :
-        for i in range(index - 1):
-            arr.append(x[i])
-    except :
-        _ = 1
+    for i in range(index - 1):
+        arr.append(x[i])
     return arr
 
 
@@ -670,438 +649,43 @@ def find_ordered_index(x):
     return ordered_index
 
 
-# =============================================================================
-# if __name__ == "__main__":
-#     random.seed(123)
-# #    x = np.random.rand(100, 20)
-# #    x = np.asmatrix(x)
-#     with open("input_x.txt") as datx:
-#         strx=datx.read()
-#     xx=np.fromstring(strx, dtype=float, sep=' ')
-#     x=np.reshape(xx,(100,20))
-# #    print(x)
-# #    print(len(x))
-# 
-# 
-#     beta = [[5], [4], [3], [2], [1], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]]
-#     beta = np.asmatrix(beta)
-# #    y = x * beta
-# 
-#     with open("input_y.txt") as daty:
-#         stry=daty.read()
-#     y=np.fromstring(stry, dtype=float, sep=' ')
-# 
-# #    print(y)
-# #    print(len(y))
-# 
-# 
-# 
-# 
-#     gindex = [1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4]
-#     gindex = np.asmatrix(gindex)
-#     gindex = np.squeeze(np.asarray(gindex))
-#     gamma = 0.5
-#     standardize = False
-#     intercept = False
-#     seed = 1234
-#     K = 20
-#     l = 5
-#     parallel = False
-#     nf = None
-#     nlambda = 100
-#     lamb = None
-#     tscv_sglfit(x, y, lamb, nlambda, gamma, gindex, K, l, parallel, seed, standardize, intercept)
-# 
-# =============================================================================
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import sys
-import numpy as np
-
-Mypath = r"C:\Users\yassine\Desktop\midasmlpy-master\midasmlpy\data_files"
-
-with open(Mypath + '\\' + "input_x.txt") as datx:
-    strx=datx.read()
-
-xx=np.fromstring(strx, dtype=float, sep=' ')
-x=np.reshape(xx,(100,20))
-
-with open(Mypath + '\\' + "input_y.txt") as daty:
-    stry=daty.read()
-    
-y=np.fromstring(stry, dtype=float, sep=' ')
-
-def MyOwnChange(x, typee):
-    if typee == "float":
-        if (isinstance(x, list)):
-            x = [float(z) for z in x]
-        else:
-            x = float(x)
-    elif typee == "int":
-        if (isinstance(x, list)):
-            x = [int(z) for z in x]
-        else:
-            x = int(x)
-    return x
-
-def sglfit(x, y, gamma = 1.0, nlambda = 100, method = "single", nf = None,
-           lambda_factor = None, lambda_ = None, pf = None, gindex = None,
-           dfmax = None, pmax = None, standardize = False, 
-           intercept = False, eps = 1e-08, maxit = 1000000, peps = 1e-08):
-    
-# =============================================================================
-#     ## data setup
-#     method <- match.arg(method)
-#     this.call <- match.call()
-#     y <- drop(y)
-#     x <- as.matrix(x)
-#     np <- dim(x)
-#     nobs <- as.integer(np[1])
-#     nvars <- as.integer(np[2])
-#     vnames <- colnames(x)
-#     ngroups <- as.integer(max(gindex))
-#     if (is.null(vnames)) vnames <- paste("V", seq(nvars), sep = "")
-#     if (NROW(y) != nobs) stop("x and y have different number of observations")
-#     if (NCOL(y) > 1L) stop("Multivariate response is not supported now")
-# =============================================================================
-    
-    np = x.shape
-    nobs = np[0]
-    nvars = np[1]
-    
-    if gindex == None:
-        gindex = [i+1 for i in range(nvars)]
-        
-    ngroups = int(max(gindex))
-    
-    if lambda_factor == None:
-        if nobs < nvars : 
-            lambda_factor = 1e-02
-        else:
-            lambda_factor = 1e-04
-    
-    if pf == None:
-        pf = [1 for i in range(nvars)]
-    
-    if dfmax == None:
-        dfmax = nvars + 1
-        
-    if pmax == None:
-        pmax = min(dfmax * 1.2, nvars)
-        
-    if maxit == None:
-        maxit = 1000000
-    
-    if nvars > 0:
-        vnames = ["V" + str(i+1) for i in range(nvars)]
-    if len(y) != nobs:
-        sys.exit("x and y have different number of observations") 
-    
-    if len(y.shape) > 1:
-        sys.exit("Multivariate response is not supported now")
-    
-    
-# =============================================================================
-#     ## parameter setup
-#     if (length(pf) != nvars) 
-#       stop("Size of L1 penalty factors does not match the number of input variables")
-#     if (length(gindex) != nvars) 
-#       stop("Group index does not match the number of input variables")
-#     maxit <- as.integer(maxit)
-#     pf <- as.double(pf)
-#     gindex <- as.integer(gindex)
-#     isd <- as.integer(standardize)
-#     intr <- as.integer(intercept)
-#     eps <- as.double(eps)
-#     peps <- as.double(peps)
-#     dfmax <- as.integer(dfmax)
-#     pmax <- as.integer(pmax)
-#     jd <- as.integer(0)
-# =============================================================================
-    
-    if len(pf) != nvars:
-        sys.exit("Size of L1 penalty factors does not match the number of input variables")
-    if len(gindex) != nvars :
-        sys.exit("Group index does not match the number of input variables")
-
-    maxit = MyOwnChange(maxit,"int")
-    pf = MyOwnChange(pf,"float")
-    gindex = MyOwnChange(gindex,"int")
-    isd = MyOwnChange(standardize,"int")
-    intr = MyOwnChange(intercept,"int")
-    eps = MyOwnChange(eps,"float")
-    peps = MyOwnChange(peps,"float")
-    dfmax = MyOwnChange(dfmax,"int")
-    pmax = MyOwnChange(pmax,"int")
-    jd = MyOwnChange(0,"int")
-    
-# =============================================================================
-#     # panel regression setup
-#     if (method == "single"){
-#       nf <- as.integer(0)
-#     }
-#     if (method != "single"){
-#       isd <- as.integer(standardize)
-#       if (method == "pooled"){
-#           intr <- as.integer(1)
-#           nf <- as.integer(0)
-#       }
-#       if (method == "fe"){
-#         intr <- as.integer(0)
-#         if (is.null(nf)) 
-#           stop("Mehtod set as fixed effects without specifying the number of fixed effects (nf).")
-#           
-#         T <- nobs/nf
-#         if (round(T) != T)
-#           stop("Number of fixed effects (nf) is not a multiple of the time series dimension, ie nf * T != nobs.")
-#       }
-#     }
-# =============================================================================
-    
-    if method == "single":
-        nf = MyOwnChange(0,"int")
-    else:
-        isd = MyOwnChange(standardize,"int")
-        if method == "pooled":
-            intr = MyOwnChange(1,"int")
-            nf = MyOwnChange(0,"int")
-        elif method == "fe":
-            intr = MyOwnChange(0,"int")
-            if nf == None:
-                sys.exit("Mehtod set as fixed effects without specifying the number of fixed effects (nf).")
-            T = nobs/nf
-            if round(T) == T:
-                sys.exit("Number of fixed effects (nf) is not a multiple of the time series dimension, ie nf * T != nobs.")
-    
-# =============================================================================
-#     # lambda setup
-#     nlam <- as.integer(nlambda)
-#     if (is.null(lambda)) {
-#       if (lambda.factor >= 1) stop("lambda.factor should be less than 1")
-#       flmin <- as.double(lambda.factor)
-#       ulam <- double(nlambda)
-#       ulam[1] <- -1
-#       ulam <- as.double(ulam)
-#     } else {
-#         flmin <- as.double(1)
-#         if (any(lambda < 0)) stop("lambdas should be non-negative")
-#         ulam <- as.double(rev(sort(lambda)))
-#         nlam <- as.integer(length(lambda))
-#     }
-# =============================================================================
-    nlam = MyOwnChange(nlambda,"int")
-    if lambda_ == None:
-        if lambda_factor >= 1:
-            sys.exit("lambda8factor should be less than 1")
-        
-        flmin = MyOwnChange(lambda_factor,"float")
-        ulam = [float(0) for i in range(nlambda)]
-        ulam[0] = -1
-        ulam = MyOwnChange(ulam,"float")
-    else:
-        flmin = MyOwnChange(1,"float")
-        if (isinstance(lambda_, list)):
-            lambda_ = MyOwnChange(lambda_,"float")
-            _ = [i for i in lambda_ if i < 0]
-            if len(_) == 0:
-                sys.exit("lambdas should be non-negative")
-        else:
-            lambda_ = MyOwnChange(lambda_,"float")
-            if lambda_ < 0:
-                sys.exit("lambda should be non-negative")
-        
-        lambda_.sort(reverse=True)
-        
-        ulam = MyOwnChange(lambda_,"float")
-        nlam = MyOwnChange(len(lambda_),"int")
-        
-# =============================================================================
-#     #################################################################################
-#     fit <- sglfitpath(x, y, nlam, flmin, ulam, isd, intr, nf, eps, peps, dfmax, pmax, jd, 
-#                 pf, gindex, ngroups, maxit, gamma, nobs, nvars, vnames)
-#     fit$call <- this.call
-#     #################################################################################
-#     class(fit) <- c("sglfit", class(fit))
-#     fit
-# =============================================================================
-    fit = sglfitpath(x, y, nlam, flmin, ulam, isd, intr, nf, eps, peps, dfmax, pmax, jd, 
-                     pf, gindex, ngroups, maxit, gamma, nobs, nvars, vnames)
-    
-    return fit
-        
-        
-sglfit(x, y, gamma = 1.0, nlambda = 100, method = "single", nf = None,
-       lambda_factor = None, lambda_ = None, pf = None,gindex = None,
-       dfmax = None, pmax = None, standardize = False, 
-       intercept = False, eps = 1e-08, maxit = 1000000, peps = 1e-08)
-
+if __name__ == "__main__":
+    random.seed(123)
+#    x = np.random.rand(100, 20)
+#    x = np.asmatrix(x)
+    with open("input_x.txt") as datx:
+        strx=datx.read()
+    xx=np.fromstring(strx, dtype=float, sep=' ')
+    x=np.reshape(xx,(100,20))
+#    print(x)
+#    print(len(x))
+
+
+    beta = [[5], [4], [3], [2], [1], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]]
+    beta = np.asmatrix(beta)
+#    y = x * beta
+
+    with open("input_y.txt") as daty:
+        stry=daty.read()
+    y=np.fromstring(stry, dtype=float, sep=' ')
+
+#    print(y)
+#    print(len(y))
+
+
+
+
+    gindex = [1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4]
+    gindex = np.asmatrix(gindex)
+    gindex = np.squeeze(np.asarray(gindex))
+    gamma = 0.5
+    standardize = False
+    intercept = False
+    seed = 1234
+    K = 20
+    l = 5
+    parallel = False
+    nf = None
+    nlambda = 100
+    lamb = None
+    tscv_sglfit(x, y, lamb, nlambda, gamma, gindex, K, l, parallel, seed, standardize, intercept)
