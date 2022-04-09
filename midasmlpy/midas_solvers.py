@@ -5,12 +5,6 @@ from scipy.optimize import minimize
 
 def optim_ardl_beta(y, z, x, poly_spec=0, nbtrials=100):
     """
-    Model: ADL-MIDAS (FADL-MIDAS) regression
-    Estimation: MIDAS-NLS based on analytic derivatives (gradient and Hessian)
-    Paper, analytic derivatives:
-    - Kostrov (2020) Estimating MIDAS regressions via MIDAS-NLS with revised optimization. Working paper.
-    Optimizer: "nlminb", with constraints.
-
     :param y:
     :param z:
     :param x:
