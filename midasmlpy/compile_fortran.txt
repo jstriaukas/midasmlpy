@@ -1,4 +1,0 @@
-cd C:\Users\Utilisateur\Documents\GitHub\midasmlpy\midasmlpy
-f2py -c -m sglfitF sglfitF.f90 --fcompiler=gnu95 --compiler=mingw32
-
-python -m numpy.f2py -c sglfitF.f90 -m sglfitF
