@@ -5,7 +5,6 @@
 !#     &  x, y, pf, dfmax, pmax, nlam, flmin, ulam, eps, peps,
 !#     & isd, intr, maxit, nalam, b0, beta, ibeta, nbeta, alam,
 !#     & npass, jerr, ngrs, nobss, nvarss, nlams)
-
 SUBROUTINE sglfit(gamma,ngroups,gindex,nobs,nvars,&
      x, y, pf,dfmax, pmax, nlam,flmin, ulam, eps, peps,&
      isd, intr, maxit, nalam, b0, beta, ibeta, nbeta, alam,&
@@ -15,29 +14,22 @@ SUBROUTINE sglfit(gamma,ngroups,gindex,nobs,nvars,&
       IMPLICIT NONE
       ! -------- INPUT VARIABLES -------- !
       Real*8, intent(in) :: gamma
-      Integer, intent(in) :: ngroups!, ngrs
-      !   Integer*4, intent(inout) :: gindex(ngrs)
+      Integer, intent(in) :: ngroups
       Integer*4, intent(in) :: gindex(:)
 	  
-      Integer, intent(in) :: nobs!#, nobss
-      Integer, intent(in) :: nvars, dfmax, pmax, nlam
-      !	  Integer, intent(in) :: nvarss, nlams
+   Integer, intent(in) :: nobs
+   Integer, intent(in) :: nvars, dfmax, pmax, nlam
    Integer, intent(in) :: isd, intr, maxit
    Integer, intent(out) :: nalam, npass, jerr
    Integer*4, intent(out) :: nbeta(nlam), ibeta(pmax)
 
-
    Real*8, intent(in) :: flmin, eps, peps
-   !      Real*8, intent(in) :: x(nobss, nvarss), y(nobss)
    Real*8, intent(in) :: x(:, :), y(:)
-   !	  Real*8, intent(inout) :: pf(nvarss)
    Real*8, intent(in) :: pf(:)
    Real*8, intent(out) :: b0(nlam), beta(pmax, nlam)
    Real*8, intent(out) :: alam(nlam)
-   !	  Real*8, intent(in) :: ulam(nlams)
    Real*8, intent(in) :: ulam(:)
    Real*8  ulam_(nlam)
-
 
    INTEGER j, l, nk, ierr
    INTEGER, Dimension(:), Allocatable :: ju
@@ -47,20 +39,6 @@ SUBROUTINE sglfit(gamma,ngroups,gindex,nobs,nvars,&
    Real*8, Dimension(:), Allocatable :: pf_
 
    real*8 maxlam,tmp
-
-   
-!!$   print*,"Hello from fortran"
-!!$   print*," gamma,ngroups:",gamma,ngroups
-!!$   print*," gindex:",gindex
-!!$   print*," nobs,nvars",nobs,nvars
-!!$   print*," x:",x
-!!$   print*," y:",y
-!!$   print*,' pf:',pf
-!!$   print*
-!!$   print*," dfmax,pmax,nlam:",dfmax,pmax,nlam
-!!$   print*,"flmin, eps, peps:",flmin, eps, peps
-!!$   print*," ulam:",ulam
-!!$   print*,"isd, intr, maxit:",isd, intr, maxit
 
    nalam = 0
    b0 = 0.D0
@@ -84,24 +62,17 @@ SUBROUTINE sglfit(gamma,ngroups,gindex,nobs,nvars,&
       If (jerr /= 0) Return
       Call chkvars(nobs, nvars, x, ju)
 
-      !by
       allocate(pf_(size(pf)))
-      !by
-      !print*,"size of pf:", size(pf)
+
 
       If (maxval(pf) <= 0.0D0) Then
           jerr = 10000
           Return
       End If
-      !      pf = max(0.0D0, pf)
       pf_ = max(0.0D0, pf)
 
 
       Call standard(nobs, nvars, x, ju, isd, intr, xmean, xnorm, maj)
-
-
-
-      !--- HERE ADDED --- !
       ! -------------------- COMPUTE LAMBDA --------------------- !
       If (ulam(1) .EQ. -1.0D0) Then
         Call maxlambda(nvars, nobs, x, y, gamma, gindex, ngroups, pf, maxlam)
@@ -111,10 +82,6 @@ SUBROUTINE sglfit(gamma,ngroups,gindex,nobs,nvars,&
             ulam_(j) = EXP(tmp)
         End Do
       End If
-      !--- HERE ENDED --- !
-
-
-
 
       If (gamma == 1.0D0) Then
           Call lassofitpathF(maj, nobs, nvars, x, y, ju, pf, dfmax,&
@@ -152,7 +119,6 @@ SUBROUTINE sglfit(gamma,ngroups,gindex,nobs,nvars,&
       IMPLICIT NONE
       INTEGER mnl, nobs, nvars, dfmax, pmax, nlam, maxit
       INTEGER nalam, npass, jerr, intr, ngroups
-      !INTEGER ju(nvars), m(pmax), nbeta(nlam), gindex(ngroups)
       INTEGER ju(nvars) 
       INTEGER*4 m(pmax), nbeta(nlam), gindex(ngroups)
       Real*8 eps, gamma, bnorm, peps
