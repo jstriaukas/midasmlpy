@@ -1,167 +1,164 @@
 ! ------------------------------------------------------------------
 ! sglfitF.f90: block coordinate descent for sg-LASSO MSE regression.
 ! ------------------------------------------------------------------
-!#      SUBROUTINE sglfit(gamma, ngroups, gindex, nobs, nvars,
-!#     &  x, y, pf, dfmax, pmax, nlam, flmin, ulam, eps, peps,
-!#     & isd, intr, maxit, nalam, b0, beta, ibeta, nbeta, alam,
-!#     & npass, jerr, ngrs, nobss, nvarss, nlams)
 SUBROUTINE sglfit(gamma,ngroups,gindex,nobs,nvars,&
      x, y, pf,dfmax, pmax, nlam,flmin, ulam, eps, peps,&
      isd, intr, maxit, nalam, b0, beta, ibeta, nbeta, alam,&
      npass,jerr)
 
   
-      IMPLICIT NONE
-      ! -------- INPUT VARIABLES -------- !
-      Real*8, intent(in) :: gamma
-      Integer, intent(in) :: ngroups
-      Integer*4, intent(in) :: gindex(:)
+    IMPLICIT NONE
+    ! -------- INPUT VARIABLES -------- !
+    Real*8, intent(in) :: gamma
+    Integer, intent(in) :: ngroups
+    Integer*4, intent(in) :: gindex(:)
 	  
-   Integer, intent(in) :: nobs
-   Integer, intent(in) :: nvars, dfmax, pmax, nlam
-   Integer, intent(in) :: isd, intr, maxit
-   Integer, intent(out) :: nalam, npass, jerr
-   Integer*4, intent(out) :: nbeta(nlam), ibeta(pmax)
+    Integer, intent(in) :: nobs
+    Integer, intent(in) :: nvars, dfmax, pmax, nlam
+    Integer, intent(in) :: isd, intr, maxit
+    Integer, intent(out) :: nalam, npass, jerr
+    Integer*4, intent(out) :: nbeta(nlam), ibeta(pmax)
 
-   Real*8, intent(in) :: flmin, eps, peps
-   Real*8, intent(in) :: x(:, :), y(:)
-   Real*8, intent(in) :: pf(:)
-   Real*8, intent(out) :: b0(nlam), beta(pmax, nlam)
-   Real*8, intent(out) :: alam(nlam)
-   Real*8, intent(in) :: ulam(:)
-   Real*8  ulam_(nlam)
+    Real*8, intent(in) :: flmin, eps, peps
+    Real*8, intent(in) :: x(:, :), y(:)
+    Real*8, intent(in) :: pf(:)
+    Real*8, intent(out) :: b0(nlam), beta(pmax, nlam)
+    Real*8, intent(out) :: alam(nlam)
+    Real*8, intent(in) :: ulam(:)
+    Real*8  ulam_(nlam)
 
-   INTEGER j, l, nk, ierr
-   INTEGER, Dimension(:), Allocatable :: ju
-   Real*8, Dimension(:), Allocatable :: xmean
-   Real*8, Dimension(:), Allocatable :: xnorm
-   Real*8, Dimension(:), Allocatable :: maj
-   Real*8, Dimension(:), Allocatable :: pf_
+    INTEGER j, l, nk, ierr
+    INTEGER, Dimension(:), Allocatable :: ju
+    Real*8, Dimension(:), Allocatable :: xmean
+    Real*8, Dimension(:), Allocatable :: xnorm
+    Real*8, Dimension(:), Allocatable :: maj
+    Real*8, Dimension(:), Allocatable :: pf_
 
-   real*8 maxlam,tmp
+    real*8 maxlam,tmp
 
-   nalam = 0
-   b0 = 0.D0
-   beta = 0.D0
-   ibeta = 0
-   nbeta = 0
-   alam = 0.D0
-   npass = 0
-   jerr = 0
-   ulam_=ulam
+    nalam = 0
+    b0 = 0.D0
+    beta = 0.D0
+    ibeta = 0
+    nbeta = 0
+    alam = 0.D0
+    npass = 0
+    jerr = 0
+    ulam_ = ulam
 
    
-      ALLOCATE(ju(1:nvars), Stat=ierr)
-      jerr = jerr + ierr
-      ALLOCATE(xmean(1:nvars), Stat=ierr)
-      jerr = jerr + ierr
-      ALLOCATE(xnorm(1:nvars), Stat=ierr)
-      jerr = jerr + ierr
-      ALLOCATE(maj(1:nvars), Stat=ierr)
-      jerr = jerr + ierr
-      If (jerr /= 0) Return
-      Call chkvars(nobs, nvars, x, ju)
+    ALLOCATE(ju(1:nvars), Stat=ierr)
+    jerr = jerr + ierr
+    ALLOCATE(xmean(1:nvars), Stat=ierr)
+    jerr = jerr + ierr
+    ALLOCATE(xnorm(1:nvars), Stat=ierr)
+    jerr = jerr + ierr
+    ALLOCATE(maj(1:nvars), Stat=ierr)
+    jerr = jerr + ierr
+    If (jerr /= 0) Return
+    Call chkvars(nobs, nvars, x, ju)
 
-      allocate(pf_(size(pf)))
-
-
-      If (maxval(pf) <= 0.0D0) Then
-          jerr = 10000
-          Return
-      End If
-      pf_ = max(0.0D0, pf)
+    allocate(pf_(size(pf)))
 
 
-      Call standard(nobs, nvars, x, ju, isd, intr, xmean, xnorm, maj)
-      ! -------------------- COMPUTE LAMBDA --------------------- !
-      If (ulam(1) .EQ. -1.0D0) Then
+    If (maxval(pf) <= 0.0D0) Then
+        jerr = 10000
+        Return
+    End If
+    pf_ = max(0.0D0, pf)
+
+
+    Call standard(nobs, nvars, x, ju, isd, intr, xmean, xnorm, maj)
+    ! -------------------- COMPUTE LAMBDA --------------------- !
+    If (ulam(1) .EQ. -1.0D0) Then
         Call maxlambda(nvars, nobs, x, y, gamma, gindex, ngroups, pf, maxlam)
         ulam_(1) = maxlam
         Do j = 2, nlam
             tmp = LOG(maxlam) + (LOG(maxlam*flmin) - LOG(maxlam)) * (j - 1) / (nlam - 1)
             ulam_(j) = EXP(tmp)
         End Do
-      End If
+    End If
 
-      If (gamma == 1.0D0) Then
-          Call lassofitpathF(maj, nobs, nvars, x, y, ju, pf, dfmax,&
+    If (gamma == 1.0D0) Then
+        Call lassofitpathF(maj, nobs, nvars, x, y, ju, pf, dfmax,&
                pmax, nlam, flmin, ulam_, eps, maxit, nalam, b0, beta, ibeta,&
                nbeta, alam, npass, jerr, intr)
-      Else
-          Call sglfitpathF(maj, gamma, ngroups, gindex, nobs, nvars,&
+    Else
+        Call sglfitpathF(maj, gamma, ngroups, gindex, nobs, nvars,&
                x, y, ju, pf, dfmax, pmax, nlam, flmin, ulam_, eps, peps, maxit,& 
                nalam, b0, beta, ibeta, nbeta, alam, npass, jerr, intr)
-      End If
-      If (jerr > 0) Return
+    End If
+    If (jerr > 0) Return
       
-      Do l = 1, nalam
-          nk = nbeta(l)
-          If (isd == 1) Then
-              Do j = 1, nk
-                  beta(j,l) = beta(j,l)/xnorm(ibeta(j))
-              End Do
-          End If
-          If (intr == 1) Then
-              b0(l)=b0(l)-dot_product(beta(1:nk,l),xmean(ibeta(1:nk)))
-          End If
-      End Do
+    Do l = 1, nalam
+        nk = nbeta(l)
+        If (isd == 1) Then
+            Do j = 1, nk
+                beta(j,l) = beta(j,l)/xnorm(ibeta(j))
+            End Do
+        End If
+        If (intr == 1) Then
+            b0(l)=b0(l)-dot_product(beta(1:nk,l),xmean(ibeta(1:nk)))
+        End If
+    End Do
       
-      DEALLOCATE(ju,xmean,xnorm,maj)
-      Return
-      End SUBROUTINE sglfit
+    DEALLOCATE(ju,xmean,xnorm,maj)
+    Return
+    End SUBROUTINE sglfit
       
       
       
-      SUBROUTINE sglfitpathF(maj, gamma, ngroups, gindex,&
+SUBROUTINE sglfitpathF(maj, gamma, ngroups, gindex,&
            nobs, nvars, x, y, ju, pf, dfmax, pmax, nlam, flmin,&
            ulam, eps, peps, maxit, nalam, b0, beta, m, nbeta,&
            alam, npass, jerr, intr)
-      IMPLICIT NONE
-      INTEGER mnl, nobs, nvars, dfmax, pmax, nlam, maxit
-      INTEGER nalam, npass, jerr, intr, ngroups
-      INTEGER ju(nvars) 
-      INTEGER*4 m(pmax), nbeta(nlam), gindex(ngroups)
-      Real*8 eps, gamma, bnorm, peps
-      Real*8 x(nobs, nvars), y(nobs), maj(nvars)
-      Real*8 pf(nvars)
-      Real*8 beta(pmax, nlam), b0(nlam)
-      Real*8 ulam(nlam), alam(nlam)
+    IMPLICIT NONE
+    INTEGER mnl, nobs, nvars, dfmax, pmax, nlam, maxit
+    INTEGER nalam, npass, jerr, intr, ngroups
+    INTEGER ju(nvars)
+    INTEGER*4 m(pmax), nbeta(nlam), gindex(ngroups)
+    Real*8 eps, gamma, bnorm, peps
+    Real*8 x(nobs, nvars), y(nobs), maj(nvars)
+    Real*8 pf(nvars)
+    Real*8 beta(pmax, nlam), b0(nlam)
+    Real*8 ulam(nlam), alam(nlam)
       
-      INTEGER, Parameter :: mnlam = 6
-      Real*8 d, dif, oldb, u, al, flmin
-      Real*8, Dimension(:), Allocatable :: b, oldbeta, r
-      Real*8 gw
-      INTEGER gstart, gend
-      INTEGER k, j, l, g, vrg, ctr, ierr, ni, me, pln
-      INTEGER gs, gj, skip
-      INTEGER, Dimension(:), Allocatable :: mm
+    INTEGER, Parameter :: mnlam = 6
+    Real*8 d, dif, oldb, u, al, flmin
+    Real*8, Dimension(:), Allocatable :: b, oldbeta, r
+    Real*8 gw
+    INTEGER gstart, gend
+    INTEGER k, j, l, g, vrg, ctr, ierr, ni, me, pln
+    INTEGER gs, gj, skip
+    INTEGER, Dimension(:), Allocatable :: mm
       
       
-      ALLOCATE(b(0:nvars), Stat=jerr)
-      ALLOCATE(oldbeta(0:nvars), Stat=ierr)
-      jerr = jerr + ierr
-      ALLOCATE(mm(1:nvars), Stat=ierr)
-      jerr = jerr + ierr
-      ALLOCATE(r(1:nobs), Stat=ierr)
-      jerr = jerr + ierr
-      If (jerr /= 0) Return
-      b = 0.0D0
-      oldbeta = 0.0D0
-      m = 0
-      mm = 0
-      npass = 0
-      ni = npass
-      mnl = min(mnlam,nlam)
-      ju = 0
-      r = y
-      Do l = 1, nlam
+    ALLOCATE(b(0:nvars), Stat=jerr)
+    ALLOCATE(oldbeta(0:nvars), Stat=ierr)
+    jerr = jerr + ierr
+    ALLOCATE(mm(1:nvars), Stat=ierr)
+    jerr = jerr + ierr
+    ALLOCATE(r(1:nobs), Stat=ierr)
+    jerr = jerr + ierr
+    If (jerr /= 0) Return
+    
+    b = 0.0D0
+    oldbeta = 0.0D0
+    m = 0
+    mm = 0
+    npass = 0
+    ni = npass
+    mnl = min(mnlam,nlam)
+    ju = 0
+    r = y
+    Do l = 1, nlam
         al = ulam(l)
         ctr = 0
         pln = 0
         Do
-          If (intr == 1) oldbeta(0) = b(0)
-          If (ni > 0) oldbeta(m(1:ni)) = b(m(1:ni))
-          Do
+            If (intr == 1) oldbeta(0) = b(0)
+            If (ni > 0) oldbeta(m(1:ni)) = b(m(1:ni))
+            Do
             npass = npass + 1
             dIf = 0.0D0
             If (intr == 1) oldbeta(0) = b(0)
