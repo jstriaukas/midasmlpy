@@ -94,141 +94,69 @@ def tscv_sglfit(x1, y1, lamb, nlambda, gamma, gindex, K, l, parallel, seed, stan
     }
     print(obj)
     return obj
-
-def MyOwnChange(x, typee):
-    if typee == "float":
-        if (isinstance(x, list)):
-            x = [float(z) for z in x]
-        else:
-            x = float(x)
-    elif typee == "int":
-        if (isinstance(x, list)):
-            x = [int(z) for z in x]
-        else:
-            x = int(x)
-    return x
-
-def sglfit(x, y, gamma = 1.0, nlambda = 100, method = "single", nf = None,
-           lambda_factor = None, lambda_ = None, pf = None, gindex = None,
-           dfmax = None, pmax = None, standardize = False,
-           intercept = False, eps = 1e-08, maxit = 1000000, peps = 1e-08):
-    
-# =============================================================================
-#     DATA SETUP
-# =============================================================================
-    
+# Updated
+def sglfit(x, y, gamma, nlambda, method, nf, lamb_factor, lamb, pf, gindex, dfmax, pmax, standardize, intercept, eps,
+           maxit, peps):
     np = x.shape
     nobs = np[0]
     nvars = np[1]
-    
-    if gindex == None:
-        gindex = [i+1 for i in range(nvars)]
-        
-    ngroups = int(max(gindex))
-    
-    if lambda_factor == None:
-        if nobs < nvars :
-            lambda_factor = 1e-02
-        else:
-            lambda_factor = 1e-04
-    
-    if pf == None:
-        pf = [1 for i in range(nvars)]
-    
-    if dfmax == None:
-        dfmax = nvars + 1
-        
-    if pmax == None:
-        pmax = min(dfmax * 1.2, nvars)
-        
-    if maxit == None:
-        maxit = 1000000
-    
-    if nvars > 0:
-        vnames = ["V" + str(i+1) for i in range(nvars)]
-    if len(y) != nobs:
-        sys.exit("x and y have different number of observations")
-    
-    if len(y.shape) > 1:
-        sys.exit("Multivariate response is not supported now")
-    
-    
-# =============================================================================
-#     PARAMETER SETUP
-# =============================================================================
-    
-    if len(pf) != nvars:
-        sys.exit("Size of L1 penalty factors does not match the number of input variables")
-    if len(gindex) != nvars :
-        sys.exit("Group index does not match the number of input variables")
+    ngroups = find_max(gindex)
+    # CHECK HERE - WHY V20? length(vnames) can be anything and depends on x
+    vnames = ["V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8", "V9", "V10", "V11", "V12", "V13", "V14", "V15", "V16",
+              "V17", "V18", "V19", "V20"]
+    isd = int(standardize)
+    intr = int(intercept)
+    jd = 0
 
-    maxit = MyOwnChange(maxit,"int")
-    pf = MyOwnChange(pf,"float")
-    gindex = MyOwnChange(gindex,"int")
-    isd = MyOwnChange(standardize,"int")
-    intr = MyOwnChange(intercept,"int")
-    eps = MyOwnChange(eps,"float")
-    peps = MyOwnChange(peps,"float")
-    dfmax = MyOwnChange(dfmax,"int")
-    pmax = MyOwnChange(pmax,"int")
-    jd = MyOwnChange(0,"int")
-    
-# =============================================================================
-#     PANEL REGRESSION SETUP
-# =============================================================================
-    
-    if method == "single":
-        nf = MyOwnChange(0,"int")
+    # panel regression setup
+    if method == 'single':
+        nf = 0
     else:
-        isd = MyOwnChange(standardize,"int")
-        if method == "pooled":
-            intr = MyOwnChange(1,"int")
-            nf = MyOwnChange(0,"int")
-        elif method == "fe":
-            intr = MyOwnChange(0,"int")
-            if nf == None:
-                sys.exit("Mehtod set as fixed effects without specifying the number of fixed effects (nf).")
-            T = nobs/nf
-            if round(T) == T:
-                sys.exit("Number of fixed effects (nf) is not a multiple of the time series dimension, ie nf * T != nobs.")
-    
-# =============================================================================
-#     LAMBDA SETUP
-# =============================================================================
-    nlam = MyOwnChange(nlambda,"int")
-    if lambda_ == None:
-        if lambda_factor >= 1:
-            sys.exit("lambda8factor should be less than 1")
-        
-        flmin = MyOwnChange(lambda_factor,"float")
-        ulam = [float(0) for i in range(nlambda)]
+        isd = int(standardize)
+        if method == 'pooled':
+            intr = 1
+            nf = 0
+        elif method == 'fe':
+            intr = 0
+            if nf is None:
+                print("Mehtod set as fixed effects without specifying the number of fixed effects (nf).")
+            T = nobs / nf
+            if round(T) is not T:
+                print("Number of fixed effects (nf) is not a multiple of the time series dimension, ie nf * T != nobs.")
+                quit()
+    # lambda setup
+    nlam = int(nlambda)
+
+    if lamb is None:
+        if lamb_factor >= 1:
+            print("lambda.factor should be less than 1")
+            quit()
+        flmin = lamb_factor
+        ulam = [0] * nlambda
         ulam[0] = -1
-        ulam = MyOwnChange(ulam,"float")
+
     else:
-        flmin = MyOwnChange(1,"float")
-        if (isinstance(lambda_, list)):
-            lambda_ = MyOwnChange(lambda_,"float")
-            _ = [i for i in lambda_ if i < 0]
-            if len(_) == 0:
-                sys.exit("lambdas should be non-negative")
-        else:
-            lambda_ = MyOwnChange(lambda_,"float")
-            if lambda_ < 0:
-                sys.exit("lambda should be non-negative")
-        
-        lambda_.sort(reverse=True)
-        
-        ulam = MyOwnChange(lambda_,"float")
-        nlam = MyOwnChange(len(lambda_),"int")
-        
-# =============================================================================
-#   FIT sg-LASSO PATH
-# =============================================================================
+        flmin = 1
+        if any(i >= 0 for i in lamb):
+            print("lambdas should be non-negative")
+            quit()
+        ulam = [0] * nlambda
+        nlam = len(ulam)
+        ulam = ulam.sort()
+
+    #################################################################################
+
+    print("fit = sglfitpath")
+    
     fit = sglfitpath(x, y, nlam, flmin, ulam, isd, intr, nf, eps, peps, dfmax, pmax, jd,
-                     pf, gindex, ngroups, maxit, gamma, nobs, nvars, vnames)
-    
-return fit
-    
+               pf, gindex, ngroups, maxit, gamma, nobs, nvars, vnames)
+
+    print(fit)
+    print("after")
+
+    return fit
+
+
 def sglfitpath(x, y, nlam, flmin, ulam, isd, intr, nf, eps, peps, dfmax, pmax, jd,
                pf, gindex, ngroups, maxit, gamma, nobs, nvars, vnames):
     # gamma setup
@@ -732,29 +660,6 @@ def find_ordered_index(x):
     return ordered_index
 
 
-import sys
-import numpy as np
-
-Mypath = r"C:\Users\Utilisateur\Documents\GitHub\midasmlpy\midasmlpy\data_files"
-"
-with open(Mypath + '\\' + "input_x.txt") as datx:
-    strx=datx.read()
-
-xx=np.fromstring(strx, dtype=float, sep=' ')
-x=np.reshape(xx,(100,20))
-
-with open(Mypath + '\\' + "input_y.txt") as daty:
-    stry=daty.read()
-    
-y=np.fromstring(stry, dtype=float, sep=' ')
-        
-        
-sglfit(x, y, gamma = 1.0, nlambda = 100, method = "single", nf = None,
-       lambda_factor = None, lambda_ = None, pf = None,gindex = None,
-       dfmax = None, pmax = None, standardize = False,
-       intercept = False, eps = 1e-08, maxit = 1000000, peps = 1e-08)
-
-
 # =============================================================================
 # if __name__ == "__main__":
 #     random.seed(123)
@@ -970,4 +875,158 @@ sglfit(x, y, gamma = 1.0, nlambda = 100, method = "single", nf = None,
 
 
 
+import sys
+import numpy as np
+
+Mypath = r"C:\Users\Utilisateur\Documents\GitHub\midasmlpy\midasmlpy\data_files"
+with open(Mypath + '\\' + "input_x.txt") as datx:
+    strx=datx.read()
+
+xx=np.fromstring(strx, dtype=float, sep=' ')
+x=np.reshape(xx,(100,50))
+
+with open(Mypath + '\\' + "input_y.txt") as daty:
+    stry=daty.read()
+    
+y=np.fromstring(stry, dtype=float, sep=' ')
+
+def MyOwnChange(x, typee):
+    if typee == "float":
+        if (isinstance(x, list)):
+            x = [float(z) for z in x]
+        else:
+            x = float(x)
+    elif typee == "int":
+        if (isinstance(x, list)):
+            x = [int(z) for z in x]
+        else:
+            x = int(x)
+    return x
+
+def sglfit(x, y, gamma = 1.0, nlambda = 100, method = "single", nf = None,
+           lambda_factor = None, lambda_ = None, pf = None, gindex = None,
+           dfmax = None, pmax = None, standardize = False, 
+           intercept = False, eps = 1e-08, maxit = 1000000, peps = 1e-08):
+    
+# =============================================================================
+#    DATA SETUP
+# =============================================================================
+    
+    np = x.shape
+    nobs = np[0]
+    nvars = np[1]
+    
+    if gindex == None:
+        gindex = [i+1 for i in range(nvars)]
+        
+    ngroups = int(max(gindex))
+    
+    if lambda_factor == None:
+        if nobs < nvars : 
+            lambda_factor = 1e-02
+        else:
+            lambda_factor = 1e-04
+    
+    if pf == None:
+        pf = [1 for i in range(nvars)]
+    
+    if dfmax == None:
+        dfmax = nvars + 1
+        
+    if pmax == None:
+        pmax = min(dfmax * 1.2, nvars)
+        
+    if maxit == None:
+        maxit = 1000000
+    
+    if nvars > 0:
+        vnames = ["V" + str(i+1) for i in range(nvars)]
+    if len(y) != nobs:
+        sys.exit("x and y have different number of observations") 
+    
+    if len(y.shape) > 1:
+        sys.exit("Multivariate response is not supported now")
+    
+    
+# =============================================================================
+#     PARAMETER SETUP
+# =============================================================================
+    
+    if len(pf) != nvars:
+        sys.exit("Size of L1 penalty factors does not match the number of input variables")
+    if len(gindex) != nvars :
+        sys.exit("Group index does not match the number of input variables")
+
+    maxit = MyOwnChange(maxit,"int")
+    pf = MyOwnChange(pf,"float")
+    gindex = MyOwnChange(gindex,"int")
+    isd = MyOwnChange(standardize,"int")
+    intr = MyOwnChange(intercept,"int")
+    eps = MyOwnChange(eps,"float")
+    peps = MyOwnChange(peps,"float")
+    dfmax = MyOwnChange(dfmax,"int")
+    pmax = MyOwnChange(pmax,"int")
+    jd = MyOwnChange(0,"int")
+    
+# =============================================================================
+#     PANEL REGRESSION SETUP
+# =============================================================================
+    
+    if method == "single":
+        nf = MyOwnChange(0,"int")
+    else:
+        isd = MyOwnChange(standardize,"int")
+        if method == "pooled":
+            intr = MyOwnChange(1,"int")
+            nf = MyOwnChange(0,"int")
+        elif method == "fe":
+            intr = MyOwnChange(0,"int")
+            if nf == None:
+                sys.exit("Mehtod set as fixed effects without specifying the number of fixed effects (nf).")
+            T = nobs/nf
+            if round(T) == T:
+                sys.exit("Number of fixed effects (nf) is not a multiple of the time series dimension, ie nf * T != nobs.")
+    
+# =============================================================================
+#     LAMBDA SETUP
+# =============================================================================
+    nlam = MyOwnChange(nlambda,"int")
+    if lambda_ == None:
+        if lambda_factor >= 1:
+            sys.exit("lambda8factor should be less than 1")
+        
+        flmin = MyOwnChange(lambda_factor,"float")
+        ulam = [float(0) for i in range(nlambda)]
+        ulam[0] = -1
+        ulam = MyOwnChange(ulam,"float")
+    else:
+        flmin = MyOwnChange(1,"float")
+        if (isinstance(lambda_, list)):
+            lambda_ = MyOwnChange(lambda_,"float")
+            _ = [i for i in lambda_ if i < 0]
+            if len(_) == 0:
+                sys.exit("lambdas should be non-negative")
+        else:
+            lambda_ = MyOwnChange(lambda_,"float")
+            if lambda_ < 0:
+                sys.exit("lambda should be non-negative")
+        
+        lambda_.sort(reverse=True)
+        
+        ulam = MyOwnChange(lambda_,"float")
+        nlam = MyOwnChange(len(lambda_),"int")
+        
+# =============================================================================
+#       sg-LASSO FIT
+# =============================================================================
+    fit = sglfitpath(x, y, nlam, flmin, ulam, isd, intr, nf, eps, peps, dfmax, pmax, jd, 
+                     pf, gindex, ngroups, maxit, gamma, nobs, nvars, vnames)
+    
+    return fit
+        
+        
+sglfit(x, y, gamma = 1.0, nlambda = 100, method = "single", nf = None,
+       lambda_factor = None, lambda_ = None, pf = None,gindex = None,
+       dfmax = None, pmax = None, standardize = False, 
+       intercept = False, eps = 1e-08, maxit = 1000000, peps = 1e-08)
 
