@@ -7,7 +7,7 @@ import sglfitF
 import sys
 
 
-Mypath = "C:/Users/Valeriia/midasmlpy-master/R_test"
+Mypath = "C:/Users/Utilisateur/Documents/GitHub/midasmlpy/R_test"
 
 
 class class_dgmatrix():
@@ -56,30 +56,18 @@ def sglfitpath(x, y, nlam, flmin, ulam, isd, intr, nf, eps, peps, dfmax, pmax, j
     intr = int(intr)
     maxit = int(maxit)
     if nf == 0:   
-        print("before fortran")
         nalam, b0, beta, ibeta, nbeta, alam, npass, jerr = sglfitF.sglfit(
             gamma, ngroups, gindex, nobs, nvars, x, y, pf, dfmax,
             pmax, nlam, flmin, ulam, eps, peps, isd, 
             intr, maxit)
-        print("after fortran",intr)
         nf = intr
-        #print(" nf=",nf)
         _ = np.transpose(beta)
         beta_ = []
         for i in range(len(_)):
             beta_ = beta_ + _[i].tolist()
         beta = np.array(beta_)
-        print("nalam:",nalam)
-        print("b0:",b0)
-        print("beta:",beta)
-        print("ibeta:",ibeta)
-        print("nbeta:",nbeta)
-        print("alam:",alam)
-        print("npass:",npass)
-        print("jerr:",jerr)
-        
-        fit = class_fit()
-        
+
+        fit = class_fit()        
         fit.nalam = nalam
         fit.b0 = b0
         fit.beta = beta
@@ -94,18 +82,11 @@ def sglfitpath(x, y, nlam, flmin, ulam, isd, intr, nf, eps, peps, dfmax, pmax, j
          print("not yet implemented")
     
 
-    print("assign fit:")
-    
-    print("fit assigned:")
-
     # output
-    #
     outlist = getoutput(fit, maxit, pmax, nvars, vnames)
     update_out = {"npasses": fit.npass, "jerr": fit.jerr}
     outlist.update(update_out)
     outlist["dimx"] = [nobs, nvars]
-
-
     #print("outlist:",outlist)
 
     return outlist
