@@ -7,9 +7,6 @@ import sglfitF
 import sys
 
 
-Mypath = "C:/Users/Utilisateur/Documents/GitHub/midasmlpy/R_test"
-
-
 class class_dgmatrix():
     def __init__(self):
         self.i = ""
@@ -275,18 +272,6 @@ def err(n, maxit, pmax):
     return n, msg
 
 
-
-with open(Mypath + '\\' + "input_x.txt") as datx:
-    strx=datx.read()
-
-xx=np.fromstring(strx, dtype=float, sep=' ')
-x=np.reshape(xx,(100,20))
-
-with open(Mypath + '\\' + "input_y.txt") as daty:
-    stry=daty.read()
-    
-y=np.fromstring(stry, dtype=float, sep=' ')
-
 def MyOwnChange(x, typee):
     if typee == "float":
         if (isinstance(x, list)):
@@ -404,6 +389,17 @@ def sglfit(x, y, gamma = 1.0, nlambda = 100, method = "single", nf = None,
     return fit
         
 
+mypath = "C:/Users/Utilisateur/Documents/GitHub/midasmlpy/R_test"
+with open(mypath + '\\' + "input_x.txt") as datx:
+    strx=datx.read()
+
+xx=np.fromstring(strx, dtype=float, sep=' ')
+x=np.reshape(xx,(100,20))
+
+with open(mypath + '\\' + "input_y.txt") as daty:
+    stry=daty.read()
+    
+y=np.fromstring(stry, dtype=float, sep=' ')
 
 solution = sglfit(x, y, gamma = .5, nlambda = 100, method = "single",
                   gindex=[1,1,1,1,1,2,2,2,2,2,3,3,3,3,3,4,4,4,4,4],
