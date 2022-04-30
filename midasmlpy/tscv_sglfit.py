@@ -54,28 +54,16 @@ def sglfitpath(x, y, nlam, flmin, ulam, isd, intr, nf, eps, peps, dfmax, pmax, j
     intr = int(intr)
     maxit = int(maxit)
     if nf == 0:   
-        print("before fortran")
         nalam, b0, beta, ibeta, nbeta, alam, npass, jerr = sglfitF.sglfit(
             gamma, ngroups, gindex, nobs, nvars, x, y, pf, dfmax,
             pmax, nlam, flmin, ulam, eps, peps, isd, 
             intr, maxit)
-        print("after fortran",intr)
         nf = intr
-        #print(" nf=",nf)
         _ = np.transpose(beta)
         beta_ = []
         for i in range(len(_)):
             beta_ = beta_ + _[i].tolist()
         beta = np.array(beta_)
-        print("nalam:",nalam)
-        print("b0:",b0)
-        print("beta:",beta)
-        print("ibeta:",ibeta)
-        print("nbeta:",nbeta)
-        print("alam:",alam)
-        print("npass:",npass)
-        print("jerr:",jerr)
-        
         fit = class_fit()
         
         fit.nalam = nalam
@@ -91,22 +79,10 @@ def sglfitpath(x, y, nlam, flmin, ulam, isd, intr, nf, eps, peps, dfmax, pmax, j
     else:
          print("not yet implemented")
     
-
-    print("assign fit:")
-    
-    print("fit assigned:")
-
-    # output
-    #
-    
     outlist = getoutput(fit, maxit, pmax, nvars, vnames)
     update_out = {"npasses": fit.npass, "jerr": fit.jerr}
     outlist.update(update_out)
     outlist["dimx"] = [nobs, nvars]
-
-
-    #print("outlist:",outlist)
-
     return outlist
 
 
@@ -187,7 +163,7 @@ def sglfit(x, y, gamma = 1.0, nlambda = 100, method = "single", nf = None,
     nlam = MyOwnChange(nlambda,"int")
     if lambda_ is None:
         if lambda_factor >= 1:
-            sys.exit("lambda8factor should be less than 1")
+            sys.exit("lambda_factor should be less than 1")
         
         flmin = MyOwnChange(lambda_factor,"float")
         ulam = [float(0) for i in range(nlambda)]
@@ -217,7 +193,7 @@ def sglfit(x, y, gamma = 1.0, nlambda = 100, method = "single", nf = None,
 
 
 def tscv_sglfit(x, y, lambda_ = None, gamma = 1.0, gindex = None, 
-                K = 20, l = 5, parallel = False, seed = None, standardize = None,
+                K = None, l = 5, parallel = False, seed = None, standardize = None,
                 intercept = None):
     N = x.shape[0]
     p = x.shape[1]
@@ -230,7 +206,8 @@ def tscv_sglfit(x, y, lambda_ = None, gamma = 1.0, gindex = None,
     lambda_ = sglfit_object['lam']
     
     nz = "Not yet"
-    
+    if K is None:
+        K = N
     if l <= 1:
         sys.exit("l must be at least 2; l=5 recommended")
     if K < 1:
@@ -678,16 +655,16 @@ solution = sglfit(x, y, gamma = gamma, nlambda = nlambda, method = method,
                   dfmax = dfmax, pmax = pmax, standardize = standardize,
                   intercept = intercept, eps = eps, maxit = maxit, peps = peps)
 
-solution["b0"]
-solution["a0"]
-solution["beta"]
-solution["df_beta"]
-solution["dd"]
-solution["lam"]
-solution["nf"]
-solution["npasses"]
-solution["jerr"]
-solution["dimx"]
+# solution["b0"]
+# solution["a0"]
+# solution["beta"]
+# solution["df_beta"]
+# solution["dd"]
+# solution["lam"]
+# solution["nf"]
+# solution["npasses"]
+# solution["jerr"]
+# solution["dimx"]
 
 
 # =============================================================================
@@ -719,21 +696,21 @@ gamma = .5
 standardize = False
 intercept = True
 seed = 1234
-K = 99
+K = None
 
 solution_tscv = tscv_sglfit(x = x, y = y, gindex = gindex, 
                             gamma = gamma, standardize = standardize, 
                             intercept = intercept, seed = seed, K = K)
 
-solution_tscv["lambda_"]
-solution_tscv["gamma"]
+#solution_tscv["lambda_"]
+#solution_tscv["gamma"]
 solution_tscv["cvm"]
-solution_tscv["cvsd"]
-solution_tscv["cvupper"]
-solution_tscv["cvlower"]
-solution_tscv["nzero"]
-solution_tscv["name"]
-solution_tscv["lamin"]
-solution_tscv["set_seed"]
-solution_tscv["sgl_fit"]
-solution_tscv["cv_fit"]
+#solution_tscv["cvsd"]
+#solution_tscv["cvupper"]
+#solution_tscv["cvlower"]
+#solution_tscv["nzero"]
+#solution_tscv["name"]
+#solution_tscv["lamin"]
+#solution_tscv["set_seed"]
+#solution_tscv["sgl_fit"]
+#solution_tscv["cv_fit"]
