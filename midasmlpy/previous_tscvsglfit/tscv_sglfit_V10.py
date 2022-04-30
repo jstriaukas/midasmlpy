@@ -7,7 +7,6 @@ from datetime import date
 import sglfitF
 import sys
 
-
 class class_dgmatrix():
     def __init__(self):
         self.i = ""
@@ -15,7 +14,6 @@ class class_dgmatrix():
         self.Dim = ""
         self.Dimnames = ""
         self.x = ""
-
 
 class class_fit():
     def __init__(self):
@@ -33,8 +31,7 @@ class class_fit():
         self.a0 = None
         self.nf = None
 
-        
-def sglfitpath(x, y, nlam, flmin, ulam, isd, intr, nf, eps, peps, dfmax, pmax, jd,
+def sglfitpath(x, y, nlam, flmin, ulam, isd, intr, nf, eps, peps, dfmax, pmax, jd, 
                pf, gindex, ngroups, maxit, gamma, nobs, nvars, vnames):
     # gamma setup
     if gamma < 0 or gamma > 1:
@@ -98,18 +95,255 @@ def sglfitpath(x, y, nlam, flmin, ulam, isd, intr, nf, eps, peps, dfmax, pmax, j
 
     # output
     #
-    
     outlist = getoutput(fit, maxit, pmax, nvars, vnames)
     update_out = {"npasses": fit.npass, "jerr": fit.jerr}
     outlist.update(update_out)
     outlist["dimx"] = [nobs, nvars]
-
-
+    
     #print("outlist:",outlist)
 
     return outlist
 
+def getoutput(fit, maxit, pmax, nvars, vnames):
+    nalam = fit.nalam
+    nbeta = get_array_by_index(fit.nbeta, nalam)
+    nbetamax = find_max(nbeta)
+    lam = get_array_by_index(fit.alam, nalam)
+    stepnames = get_step_names("s", nalam)
+    n, errmsg = err(fit.jerr, maxit, pmax)
+    if n == 1:
+        sys.exit(errmsg)
+    elif n == -1:
+        print(errmsg)
+    dd = [nvars, nalam]
+    if nbetamax > 0:
+        beta = find_beta(fit.beta, pmax, nalam, nbetamax)
+        df_beta = sum(abs(beta) > 0)
+        ja = get_array_by_index(fit.ibeta, nbetamax)
+        oja = np.argsort(ja) + 1
+        ja = ja[oja-1].tolist() * nalam
+        ibeta = np.concatenate([[1], np.repeat(nbetamax, nalam)]).cumsum()
+        
+        _ = np.transpose(beta[(oja - 1).tolist()])
+        __ = []
+        for i in range(len(_)):
+            __ = __ + _[i].tolist()
+        
+        beta_ = class_dgmatrix()
+        beta_.i = MyOwnChange([k-1 for k in ja],"int")
+        beta_.p = MyOwnChange([k-1 for k in ibeta],"int")
+        beta_.x = __    
+        beta_.Dimnames = [vnames,stepnames]
+        beta_.Dim = dd
+            
+        beta = beta_
+        
+    else:
+        beta = zeromat(nvars, nalam, vnames, stepnames)
+        df_beta = [0] * nalam
+    b0 = fit.b0
+    
+    if not b0 is None:
+        b0 = get_array_by_index(b0, nalam)
+    
+    a0 = fit.a0
+    nf = fit.nf
+    
+    if not a0 is None:
+        a0 = np.full((nf, nalam), a0)
+    
+    if not fit.theta is None:
+        ntheta = get_array_by_index(fit.ntheta, nalam)
+        nthetamax = find_max(ntheta)
+        if nthetamax > 0:
+            theta = find_beta(fit.theta, pmax, nalam, nthetamax)
+            df_theta = sum(abs(theta) > 0)
+            ja = get_array_by_index(fit.itheta, nthetamax)
+            oja = np.argsort(ja) + 1
+            ja = ja[oja-1].tolist() * nalam
+            itheta = np.concatenate([[1], np.repeat(nthetamax, nalam)]).cumsum()
 
+            _ = np.transpose(theta[(oja - 1).tolist()])
+            __ = []
+            for i in range(len(_)):
+                __ = __ + _[i].tolist()
+
+            theta_ = class_dgmatrix()
+            theta_.i = MyOwnChange([k-1 for k in ja],"int")
+            theta_.p = MyOwnChange([k-1 for k in itheta],"int")
+            theta_.x = __    
+            theta_.Dimnames = [vnames,stepnames]
+            theta_.Dim = dd
+                
+            theta = theta_
+        else:
+            theta = zeromat(nvars, nalam, vnames, stepnames)
+            df_theta = [0] * nalam
+            
+        t0 = fit.t0
+        if not t0 is None:
+            t0 = get_array_by_index(t0, nalam)
+
+        return {
+                "b0": b0,
+                "a0": a0,
+                "beta": beta,
+                "t0": t0,
+                "theta": theta,
+                "df_beta": df_beta,
+                "df_theta": df_theta,
+                "dd": dd,
+                "lam": lam
+                }
+    return {
+            "b0": b0,
+            "a0": a0,
+            "beta": beta,
+            "df_beta": df_beta,
+            "dd": dd,
+            "lam": lam,
+            "nf": nf
+            }
+    
+def zeromat(nvars, nalam, vnames, stepnames):
+    dgmatrix = class_dgmatrix()
+    
+    dgmatrix.i = [0]*nalam
+    dgmatrix.p = list(range(nalam+1))
+    dgmatrix.Dim = [nvars, nalam]
+    dgmatrix.Dimnames = [vnames,stepnames]
+    dgmatrix.x = [0]*nalam
+    
+    return dgmatrix
+
+def find_beta(beta, pmax, nalam, nbetamax):
+    beta = get_array_by_index(beta, pmax * nalam)
+    beta = np.transpose(beta.reshape((nalam,pmax)))
+    new_beta = get_array_by_index(beta, nbetamax)
+    return new_beta
+
+def get_array_by_index(x, index):
+    arr = x[range(index)]
+    return arr
+
+def find_diff(x):
+    diff_arr = []
+    for i in range(len(x) - 1):
+        diff_arr.append(x[i + 1] - x[i])
+    return diff_arr
+
+def find_index(x):
+    index_arr = []
+    for i in range(1,len(x)+1):
+        if x[i-1] == 1:
+            index_arr.append(i)
+    index_arr.append(len(x)+1)
+    return index_arr
+
+def find_max(x):
+    max_val = 0
+    for i in range(len(x)):
+        if x[i] > max_val:
+            max_val = x[i]
+    return max_val
+
+def get_step_names(str1, step):
+    name_arr = []
+    for i in range(step):
+        i = i
+        names = '"' + str1 + str(i) + '"'
+        name_arr.append(names)
+    return name_arr
+
+def err(n, maxit, pmax):
+    if n == 0:
+        msg = ""
+    elif n > 0:
+        if n < 7777:
+            msg = "Memory allocation error"
+        if n == 7777:
+            msg = "All used predictors have zero variance"
+        n = 1
+        msg = "in fortran code -" + msg
+    elif n < 0:
+        if n > -10000:
+            msg = "Convergence for " + str(-n) + "th lambda value not reached after maxit=" + str(
+                maxit) + " iterations; solutions for larger lambdas returned "
+        if n < -10000:
+            msg = "Number of nonzero coefficients along the path exceeds pmax=" + pmax + " at" + str(
+                -n - 10000) + "th lambda value; solutions for larger lambdas returned"
+        n = -1
+        msg = "from fortran code -" + msg
+    
+    return n, msg
+
+def MyOwnChange(x, typee):
+    if typee == "float":
+        if (isinstance(x, list)):
+            x = [float(z) for z in x]
+        else:
+            x = float(x)
+    elif typee == "int":
+        if (isinstance(x, list)):
+            x = [int(z) for z in x]
+        else:
+            x = int(x)
+    return x
+
+def computegapobs(whichfoldnot, N, l):
+    return [k for k in range(N) if k not in range(whichfoldnot-l-1,whichfoldnot+l)]
+    
+def find_whichgaptrain(x, y):
+    return x[np.array(y)]
+
+def lambda_interp(lamb, s):
+    lamb, s = np.array(lamb), np.array(s)
+    if(len(lamb) == 1):
+        nums = len(s)
+        left = [1]*nums
+        right = left
+        sfrac = [1]*nums
+    else:
+        lamb_max = max(lamb)
+        lamb_min = min(lamb)
+        for i in range(len(s)):
+            if s[i] > lamb_max:
+                s[i] = lamb_max
+            if s[i] < lamb_min:
+                s[i] = lamb_min
+        k = len(lamb) - 1
+        sfrac = (lamb[0] - np.array(s))/(lamb[0] - lamb[k])
+        lamb = (lamb[0] - np.array(lamb))/(lamb[0] - lamb[k])
+        
+        x=np.array(lamb)
+        y=np.arange(1,k+2)
+        
+        coord = np.zeros(len(sfrac))
+        left = np.zeros(len(sfrac))
+        right = np.zeros(len(sfrac))
+        
+        for i in range(len(sfrac)):
+            y_interp = interp1d(x,y)
+            coord[i] = y_interp(sfrac[i])
+            left[i] = np.floor(coord[i])
+            right[i] = np.ceil(coord[i])
+        ta = lamb[MyOwnChange((left-1).tolist(),"int")] - lamb[MyOwnChange((right-1).tolist(),"int")]
+        fo = (sfrac - lamb[MyOwnChange((right-1).tolist(),"int")])
+        sfrac = fo / ta
+        sfrac[left == right] = 1
+    return dict(left = left, right = right, frac = sfrac)
+
+def getmin(lamb, cvm, cvsd):
+    cvmin = min(cvm)
+    idmin = (cvm <= cvmin).tolist()
+    lambda_min = max(lamb[idmin])
+    idmin = np.argmax(lamb == lambda_min)
+    semin = (cvm + cvsd)[idmin]
+    idmin = (cvm <= semin).tolist()
+    lambda_1se = max(lamb[idmin])
+    
+    return dict(lambda_min = lambda_min, lambda_1se = lambda_1se)
+    
 def sglfit(x, y, gamma = 1.0, nlambda = 100, method = "single", nf = None,
            lambda_factor = None, lambda_ = None, pf = None, gindex = None,
            dfmax = None, pmax = None, standardize = False, 
@@ -215,7 +449,6 @@ def sglfit(x, y, gamma = 1.0, nlambda = 100, method = "single", nf = None,
     
     return fit
 
-
 def tscv_sglfit(x, y, lambda_ = None, gamma = 1.0, gindex = None, 
                 K = 20, l = 5, parallel = False, seed = None, standardize = None,
                 intercept = None):
@@ -243,8 +476,7 @@ def tscv_sglfit(x, y, lambda_ = None, gamma = 1.0, gindex = None,
     random.seed(seed)
     foldid = [random.choice(range(N)) for _ in range(K)]
     
-    outlist = np.empty((K, 1)).tolist()
-    
+    outlist = np.empty((K, 1)).tolist()    
     
     if parallel: #what that mean ???
         for i in range(K):
@@ -281,7 +513,6 @@ def tscv_sglfit(x, y, lambda_ = None, gamma = 1.0, gindex = None,
         }
     }
     
-    
     obj = dict(lambda_ = lambda_, gamma = gamma, cvm = cvm, cvsd = cvsd, 
                cvupper = cvm + cvsd, cvlower = cvm - cvsd, nzero = nz, 
                name = cvname, lamin = lamin, set_seed = seed,
@@ -289,7 +520,6 @@ def tscv_sglfit(x, y, lambda_ = None, gamma = 1.0, gindex = None,
     
     
     return obj
-
 
 def tscv_sglpath(outlist, lamb, x, y, foldid): 
     typenames = "Single outcome sg-LASSO"
@@ -312,7 +542,6 @@ def tscv_sglpath(outlist, lamb, x, y, foldid):
     cvsd = np.sqrt(np.nanmean(np.power(cvraw - cvm,2),axis=0) / (N-1))
     
     return dict(cvm = cvm, cvsd = cvsd, name = typenames)
-
     
 def predict_sglpath(object_, newx, method = "single", s = None):
     
@@ -338,7 +567,6 @@ def predict_sglpath(object_, newx, method = "single", s = None):
             nbeta = add1 + add2
             
         nfit = np.matmul(np.array([1] + newx.tolist()),nbeta)
-        
     
     if method == "fe":
         a0 = np.array(object_["a0"])
@@ -363,274 +591,6 @@ def predict_sglpath(object_, newx, method = "single", s = None):
         nfit = np.matmul(np.column_stack((np.kron(np.eye(N), np.ones((T,1))),newx)),nbeta)
     
     return nfit
-
-        
-def getoutput(fit, maxit, pmax, nvars, vnames):
-    nalam = fit.nalam
-    nbeta = get_array_by_index(fit.nbeta, nalam)
-    nbetamax = find_max(nbeta)
-    lam = get_array_by_index(fit.alam, nalam)
-    stepnames = get_step_names("s", nalam)
-    n, errmsg = err(fit.jerr, maxit, pmax)
-    if n == 1:
-        sys.exit(errmsg)
-    elif n == -1:
-        print(errmsg)
-    dd = [nvars, nalam]
-    if nbetamax > 0:
-        beta = find_beta(fit.beta, pmax, nalam, nbetamax)
-        df_beta = sum(abs(beta) > 0)
-        ja = get_array_by_index(fit.ibeta, nbetamax)
-        oja = np.argsort(ja) + 1
-        ja = ja[oja-1].tolist() * nalam
-        ibeta = np.concatenate([[1], np.repeat(nbetamax, nalam)]).cumsum()
-        _ = beta[(oja - 1).tolist()]
-        
-        while len(_) < nvars:
-            _ = np.insert(_, 8, np.zeros((1,nalam)), axis=0)
-        
-        _ = np.transpose(_)
-        
-        __ = []
-        for i in range(len(_)):
-            __ = __ + _[i].tolist()
-            
-        beta_ = class_dgmatrix()
-        beta_.i = MyOwnChange([k-1 for k in ja],"int")
-        beta_.p = MyOwnChange([k-1 for k in ibeta],"int")
-        beta_.x = __
-        beta_.Dimnames = [vnames,stepnames]
-        beta_.Dim = dd
-            
-        beta = beta_
-        
-    else:
-        beta = zeromat(nvars, nalam, vnames, stepnames)
-        df_beta = [0] * nalam
-    b0 = fit.b0
-    
-    if not b0 is None:
-        b0 = get_array_by_index(b0, nalam)
-    
-    a0 = fit.a0
-    nf = fit.nf
-    
-    if not a0 is None:
-        a0 = np.full((nf, nalam), a0)
-    
-    if not fit.theta is None:
-        ntheta = get_array_by_index(fit.ntheta, nalam)
-        nthetamax = find_max(ntheta)
-        if nthetamax > 0:
-            theta = find_beta(fit.theta, pmax, nalam, nthetamax)
-            df_theta = sum(abs(theta) > 0)
-            ja = get_array_by_index(fit.itheta, nthetamax)
-            oja = np.argsort(ja) + 1
-            ja = ja[oja-1].tolist() * nalam
-            itheta = np.concatenate([[1], np.repeat(nthetamax, nalam)]).cumsum()
-            _ = theta[(oja - 1).tolist()]
-            
-            while len(_) < nvars:
-                _ = np.insert(_, 8, np.zeros((1,nalam)), axis=0)
-
-            
-            _ = np.transpose(_)
-            __ = []
-            for i in range(len(_)):
-                __ = __ + _[i].tolist()
-
-            theta_ = class_dgmatrix()
-            theta_.i = MyOwnChange([k-1 for k in ja],"int")
-            theta_.p = MyOwnChange([k-1 for k in itheta],"int")
-            theta_.x = __    
-            theta_.Dimnames = [vnames,stepnames]
-            theta_.Dim = dd
-                
-            theta = theta_
-        else:
-            theta = zeromat(nvars, nalam, vnames, stepnames)
-            df_theta = [0] * nalam
-            
-        t0 = fit.t0
-        if not t0 is None:
-            t0 = get_array_by_index(t0, nalam)
-
-        return {
-                "b0": b0,
-                "a0": a0,
-                "beta": beta,
-                "t0": t0,
-                "theta": theta,
-                "df_beta": df_beta,
-                "df_theta": df_theta,
-                "dd": dd,
-                "lam": lam
-                }
-    return {
-            "b0": b0,
-            "a0": a0,
-            "beta": beta,
-            "df_beta": df_beta,
-            "dd": dd,
-            "lam": lam,
-            "nf": nf
-            }
-    
-
-def zeromat(nvars, nalam, vnames, stepnames):
-    dgmatrix = class_dgmatrix()
-    
-    dgmatrix.i = [0]*nalam
-    dgmatrix.p = list(range(nalam+1))
-    dgmatrix.Dim = [nvars, nalam]
-    dgmatrix.Dimnames = [vnames,stepnames]
-    dgmatrix.x = [0]*nalam
-    
-    return dgmatrix
-
-            
-def find_beta(beta, pmax, nalam, nbetamax):
-    beta = get_array_by_index(beta, pmax * nalam)
-    beta = np.transpose(beta.reshape((nalam,pmax)))
-    new_beta = get_array_by_index(beta, nbetamax)
-    return new_beta
-
-
-def get_array_by_index(x, index):
-    arr = x[range(index)]
-    return arr
-
-
-def find_diff(x):
-    diff_arr = []
-    for i in range(len(x) - 1):
-        diff_arr.append(x[i + 1] - x[i])
-    return diff_arr
-
-
-def find_index(x):
-    index_arr = []
-    for i in range(1,len(x)+1):
-        if x[i-1] == 1:
-            index_arr.append(i)
-    index_arr.append(len(x)+1)
-    return index_arr
-
-
-def find_max(x):
-    max_val = 0
-    for i in range(len(x)):
-        if x[i] > max_val:
-            max_val = x[i]
-    return max_val
-
-
-def get_step_names(str1, step):
-    name_arr = []
-    for i in range(step):
-        i = i
-        names = '"' + str1 + str(i) + '"'
-        name_arr.append(names)
-    return name_arr
-
-
-def err(n, maxit, pmax):
-    if n == 0:
-        msg = ""
-    elif n > 0:
-        if n < 7777:
-            msg = "Memory allocation error"
-        if n == 7777:
-            msg = "All used predictors have zero variance"
-        n = 1
-        msg = "in fortran code -" + msg
-    elif n < 0:
-        if n > -10000:
-            msg = "Convergence for " + str(-n) + "th lambda value not reached after maxit=" + str(
-                maxit) + " iterations; solutions for larger lambdas returned "
-        if n < -10000:
-            msg = "Number of nonzero coefficients along the path exceeds pmax=" + pmax + " at" + str(
-                -n - 10000) + "th lambda value; solutions for larger lambdas returned"
-        n = -1
-        msg = "from fortran code -" + msg
-    
-    
-    return n, msg
-
-
-def MyOwnChange(x, typee):
-    if typee == "float":
-        if (isinstance(x, list)):
-            x = [float(z) for z in x]
-        else:
-            x = float(x)
-    elif typee == "int":
-        if (isinstance(x, list)):
-            x = [int(z) for z in x]
-        else:
-            x = int(x)
-    return x
-
-
-def computegapobs(whichfoldnot, N, l):
-    return [k for k in range(N) if k not in range(whichfoldnot-l-1,whichfoldnot+l)]
-    
-
-def find_whichgaptrain(x, y):
-    return x[np.array(y)]
-
-
-def lambda_interp(lamb, s):
-    lamb, s = np.array(lamb), np.array(s)
-    if(len(lamb) == 1):
-        nums = len(s)
-        left = [1]*nums
-        right = left
-        sfrac = [1]*nums
-    else:
-        lamb_max = max(lamb)
-        lamb_min = min(lamb)
-        for i in range(len(s)):
-            if s[i] > lamb_max:
-                s[i] = lamb_max
-            if s[i] < lamb_min:
-                s[i] = lamb_min
-        k = len(lamb) - 1
-        sfrac = (lamb[0] - np.array(s))/(lamb[0] - lamb[k])
-        lamb = (lamb[0] - np.array(lamb))/(lamb[0] - lamb[k])
-        
-        x=np.array(lamb)
-        y=np.arange(1,k+2)
-        
-        coord = np.zeros(len(sfrac))
-        left = np.zeros(len(sfrac))
-        right = np.zeros(len(sfrac))
-        
-        for i in range(len(sfrac)):
-            y_interp = interp1d(x,y)
-            coord[i] = y_interp(sfrac[i])
-            left[i] = np.floor(coord[i])
-            right[i] = np.ceil(coord[i])
-        ta = lamb[MyOwnChange((left-1).tolist(),"int")] - lamb[MyOwnChange((right-1).tolist(),"int")]
-        fo = (sfrac - lamb[MyOwnChange((right-1).tolist(),"int")])
-        sfrac = fo / ta
-        sfrac[left == right] = 1
-    return dict(left = left, right = right, frac = sfrac)
-
-
-def getmin(lamb, cvm, cvsd):
-    cvmin = min(cvm)
-    idmin = (cvm <= cvmin).tolist()
-    lambda_min = max(lamb[idmin])
-    idmin = np.argmax(lamb == lambda_min)
-    semin = (cvm + cvsd)[idmin]
-    idmin = (cvm <= semin).tolist()
-    lambda_1se = max(lamb[idmin])
-    
-    return dict(lambda_min = lambda_min, lambda_1se = lambda_1se)
-
-
-
 
 # =============================================================================
 # =============================================================================
@@ -688,6 +648,7 @@ solution["nf"]
 solution["npasses"]
 solution["jerr"]
 solution["dimx"]
+
 
 
 # =============================================================================
