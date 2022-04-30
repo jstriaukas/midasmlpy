@@ -235,8 +235,8 @@ def tscv_sglfit(x, y, lambda_ = None, gamma = 1.0, gindex = None,
         sys.exit("l must be at least 2; l=5 recommended")
     if K < 1:
         sys.exit("K must be at least 1; K=20 recommended")
-    if K >= N:
-        sys.exit("K must be at most T-1; K=20 recommended")
+    if K > N:
+        sys.exit("K must be at most T (sample size); K=20 recommended")
     if seed is None:
         seed = int((date.today() - date(1970, 1, 1)).days)
     
@@ -642,7 +642,7 @@ def getmin(lamb, cvm, cvsd):
 # =============================================================================
 # =============================================================================
 
-Mypath_100_50 = r"C:\Users\Utilisateur\Documents\GitHub\midasmlpy\data_files"
+Mypath_100_50 = r"C:\Users\Utilisateur\Documents\GitHub\midasmlpy\midasmlpy\data_files"
 
 with open(Mypath_100_50 + '\\' + "input_x.txt") as datx:
     strx=datx.read()
