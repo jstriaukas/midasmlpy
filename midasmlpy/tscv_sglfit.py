@@ -193,15 +193,18 @@ def sglfit(x, y, gamma = 1.0, nlambda = 100, method = "single", nf = None,
 
 
 def tscv_sglfit(x, y, lambda_ = None, gamma = 1.0, gindex = None, 
-                K = None, l = 5, parallel = False, seed = None, standardize = None,
-                intercept = None):
+                K = None, l = 5, parallel = False, seed = None, standardize = False,
+                intercept = False):
     N = x.shape[0]
     p = x.shape[1]
     
     if gindex is None:
         gindex = [i for i in range(1,p+1)]
     
-    sglfit_object = sglfit(x, y, lambda_ = lambda_ , gamma = gamma, gindex=gindex, method = "single")
+    sglfit_object = sglfit(x, y, gamma = gamma, nlambda = 100, method = "single", nf = None,
+           lambda_factor = None, lambda_ = lambda_, pf = None, gindex = gindex,
+           dfmax = None, pmax = None, standardize = standardize, 
+           intercept = intercept, eps = 1e-08, maxit = 1000000, peps = 1e-08)
     
     lambda_ = sglfit_object['lam']
     
@@ -223,20 +226,26 @@ def tscv_sglfit(x, y, lambda_ = None, gamma = 1.0, gindex = None,
     outlist = np.empty((K, 1)).tolist()
     
     
-    if parallel: #what that mean ???
+    if parallel:
         for i in range(K):
             whichfoldnot = foldid[i]
             whichgaptrain = computegapobs(whichfoldnot, N, l)
             y_sub = find_whichgaptrain(y, whichgaptrain)
             x_sub = find_whichgaptrain(x, whichgaptrain)
-            outlist[i] = sglfit(x = x_sub,y = y_sub, lambda_ = lambda_.tolist(), gamma = gamma, gindex=gindex, method = "single")
+            outlist[i] = sglfit(x = x_sub,y = y_sub, gamma = gamma, nlambda = 100, method = "single", nf = None,
+           lambda_factor = None, lambda_ = lambda_.tolist(), pf = None, gindex = gindex,
+           dfmax = None, pmax = None, standardize = standardize, 
+           intercept = intercept, eps = 1e-08, maxit = 1000000, peps = 1e-08)
     else:
         for i in range(K):
             whichfoldnot = foldid[i]
             whichgaptrain = computegapobs(whichfoldnot, N, l)
             y_sub = find_whichgaptrain(y, whichgaptrain)
             x_sub = find_whichgaptrain(x, whichgaptrain)
-            outlist[i] = sglfit(x = x_sub,y = y_sub, lambda_ = lambda_.tolist(), gamma = gamma, gindex=gindex, method = "single")
+            outlist[i] = sglfit(x = x_sub,y = y_sub, gamma = gamma, nlambda = 100, method = "single", nf = None,
+           lambda_factor = None, lambda_ = lambda_.tolist(), pf = None, gindex = gindex,
+           dfmax = None, pmax = None, standardize = standardize, 
+           intercept = intercept, eps = 1e-08, maxit = 1000000, peps = 1e-08)
     
     cvstuff = tscv_sglpath(outlist, lambda_, x, y, foldid)
     
