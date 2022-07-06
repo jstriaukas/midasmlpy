@@ -1,6 +1,7 @@
 # External imports
+from multiprocessing import Pool
 import numpy as np
-from scipy.optimize import minimize
+import scipy
 
 
 def optim_ardl_beta(y, z, x, poly_spec=0, nbtrials=100):
@@ -34,9 +35,19 @@ def optim_ardl_beta(y, z, x, poly_spec=0, nbtrials=100):
     # -------------------- main optimization --------------------#
     x0 = np.array([y, z, x, poly_spec, nbtrials])
 
-    opt = minimize(estimate_ardl_beta, x0, method='Newton-CG',
-                   jac=gradient_ardl_beta, hess=hessian_ardl_beta,
-                   options={'xatol': 1.5e-10, 'disp': True})
+    def multistart(num_core=2, count=100):
+        async_res = []
+        with Pool(processes=num_core) as p:
+            for _ in range(count):
+                async_res.append(p.apply_async(
+                    scipy.optimize.minimize(estimate_ardl_beta, x0, method='Newton-CG',
+                                            jac=gradient_ardl_beta, hess=hessian_ardl_beta,
+                                            options={'xatol': 1.5e-10, 'disp': True})
+                ))
+        return min(async_res)
+
+    opt = multistart()
+
     # -------------------- xxxxxxxxxxxxxxxx --------------------#
 
     # back-out parameters
