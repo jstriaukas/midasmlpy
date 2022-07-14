@@ -33,7 +33,7 @@ def optim_ardl_beta(y, z, x, poly_spec=0, nbtrials=100):
     # data_list = [y, z, x, poly_spec]
 
     # -------------------- main optimization --------------------#
-    x0 = np.array([y, z, x, poly_spec, nbtrials])
+    x0 = np.array([y, z, x, poly_spec, nbtrials])  # with same info as contained in data_dict
 
     def multistart(num_core=2, count=100):
         async_res = []
@@ -78,13 +78,84 @@ def get_constr_beta(poly_sec, k):
     pass
 
 
-def estimate_ardl_beta(args, data_list):
+def estimate_ardl_beta(args, data_dict):
     pass
 
 
-def gradient_ardl_beta(args, data_list):
-    pass
+def gradient_ardl_beta(args, data_dict):
+    x = data_dict['x']
+    y = data_dict['y']
+    z = data_dict['z']
+
+    p = None
+    try:
+        p = np.shape(x)[1]
+    except IndexError:
+        print("The input x for gradient_ardl_beta has only one dimension, instead of the expected 2.")
+
+    ii = np.ones([p, 1])
+    xx = np.arange(1, p + 1) / (p + 1)
+
+    poly_spec = data_dict['poly_spec']
+
+    if poly_spec == 0:
+        theta1 = args[0]
+        theta3 = args[2]
+    elif poly_spec == 1:
+        theta1 = 1
+        theta3 = args[2]
+    elif poly_spec == 2:
+        theta1 = args[0]
+        theta3 = 0
+    elif poly_spec == 3:
+        theta1 = 1
+        theta3 = 0
+
+    theta2 = args[1]
+    beta = args[3]
+    rho = args[4:]
+    m = scipy.special.gamma(theta1+theta2/(scipy.special.gamma(theta1) * scipy.special.gamma(theta2)))
+    weights = xx**(theta1 - 1) * (ii - xx)**(theta2 - 1) + theta3
+
+    nabla_G = 2 * (y - beta * np.matmul(x, weights) - np.matmul(z, rho))
+
+    T_star_w_C = -beta * x.T
+    T_star_beta_C = np.matmul(-1 * weights.T, x.T)
+    T_star_rho_C = -1 * z.T
+
+    weights_tilde = xx**(theta1 - 1) * (ii - xx)**(theta2 - 1) * m
+
+    log_derivative_theta2 = np.log(ii - xx) + scipy.special.digamma(theta1 + theta2) - scipy.special.digamma(theta2)
+    T_star_theta2_W = np.transpose(log_derivative_theta2*weights_tilde)
+
+    part2 = np.matmul(np.matmul(T_star_theta2_W, T_star_w_C), nabla_G)  # theta2
+
+    if poly_spec == 0:
+        log_derivative_theta1 = np.log(xx) + scipy.special.digamma(theta1 + theta2) - scipy.special.digamma(theta1)
+        T_star_theta1_W = np.transpose(log_derivative_theta1 * weights_tilde)
+        T_star_theta3_W = ii.T
+        part1 = np.matmul(np.matmul(T_star_theta1_W, T_star_w_C), nabla_G)  # theta1
+        part3 = np.matmul(np.matmul(T_star_theta3_W, T_star_w_C), nabla_G)  # theta3
+    elif poly_spec == 1:
+        T_star_theta3_W = ii.T
+        part1 = 0
+        part3 = np.matmul(np.matmul(T_star_theta3_W, T_star_w_C), nabla_G)  # theta3
+    elif poly_spec == 2:
+        log_derivative_theta1 = np.log(xx) + scipy.special.digamma(theta1 + theta2) - scipy.special.digamma(theta1)
+        T_star_theta1_W = np.transpose(log_derivative_theta1 * weights_tilde)
+        part1 = np.matmul(np.matmul(T_star_theta1_W, T_star_w_C), nabla_G)  # theta1
+        part3 = 0
+    elif poly_spec == 3:
+        part1 = 0
+        part3 = 0
+
+    part4 = np.matmul(T_star_beta_C, nabla_G)  # beta
+    part5 = np.matmul(T_star_rho_C, nabla_G)  # rho
+    grad = np.concatenate([part1, part2, part3, part4, part5]).flatten()
+
+    return grad
 
 
-def hessian_ardl_beta(args, data_list):
+# TODO: Complete the following
+def hessian_ardl_beta(args, data_dict):
     pass
