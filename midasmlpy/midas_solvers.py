@@ -1,6 +1,7 @@
 # External imports
 from multiprocessing import Pool
 import numpy as np
+import pandas as pd
 import scipy
 
 
@@ -114,7 +115,7 @@ def gradient_ardl_beta(args, data_dict):
     theta2 = args[1]
     beta = args[3]
     rho = args[4:]
-    m = scipy.special.gamma(theta1+theta2/(scipy.special.gamma(theta1) * scipy.special.gamma(theta2)))
+    m = scipy.special.gamma(theta1+theta2)/(scipy.special.gamma(theta1) * scipy.special.gamma(theta2))
     weights = xx**(theta1 - 1) * (ii - xx)**(theta2 - 1) + theta3
 
     nabla_G = 2 * (y - beta * np.matmul(x, weights) - np.matmul(z, rho))
@@ -156,6 +157,139 @@ def gradient_ardl_beta(args, data_dict):
     return grad
 
 
-# TODO: Complete the following
 def hessian_ardl_beta(args, data_dict):
-    pass
+    x = data_dict['x']
+    y = data_dict['y']
+    z = data_dict['z']
+
+    p = None
+    try:
+        p = np.shape(x)[1]
+    except IndexError:
+        print("The input x for gradient_ardl_beta has only one dimension, instead of the expected 2.")
+
+    ii = np.ones([p, 1])
+    xx = np.arange(1, p + 1) / (p + 1)
+
+    poly_spec = data_dict['poly_spec']
+
+    if poly_spec == 0:
+        theta1 = args[0]
+        theta3 = args[2]
+    elif poly_spec == 1:
+        theta1 = 1
+        theta3 = args[2]
+    elif poly_spec == 2:
+        theta1 = args[0]
+        theta3 = 0
+    elif poly_spec == 3:
+        theta1 = 0
+        theta3 = 0
+
+    theta2 = args[1]
+    beta = args[3]
+    rho = args[4:]
+    k = np.zeros([1, len(rho)])
+
+    m = scipy.special.gamma(theta1 + theta2) / (scipy.special.gamma(theta1) * scipy.special.gamma(theta2))
+    weights = xx**(theta1 - 1) * (ii - xx)**(theta2 - 1) * m + theta3
+
+    ## line 1
+    E1 = 2 * (y - beta * np.matmul(x, weights) - np.matmul(z, rho))
+    F1 = -1 * beta * x.T
+    D1 = np.log(xx) + scipy.special.digamma(theta1 + theta2) - scipy.special.digamma(theta1)
+    C1 = xx**(theta1 - 1) * (ii - xx)**(theta2 - 1) * m
+    ### element 1
+    dC1_theta1 = C1 * D1
+    dD1_theta1 = scipy.special.polygamma(1, theta1 + theta2) - scipy.special.polygamma(1, theta1)  # trigamma
+    dB1_theta1 = np.matmul(F1, -2 * beta * np.matmul(x, dC1_theta1))
+    ### element 2
+    D2 = np.log(ii - xx) + scipy.special.digamma(theta1 + theta2) - scipy.special.digamma(theta2)
+    dC1_theta2 = C1 * D2
+    dD1_theta2 = scipy.special.polygamma(1, theta1 + theta2)
+    dB1_theta2 = np.matmul(F1, -2 * beta * np.matmul(x, dC1_theta2))
+    ### element 3
+    dE1_theta3 = -2 * beta * np.matmul(x, ii)
+    ### element 4
+    dF1_beta = -1 * x.T
+    dE1_beta = -2 * np.matmul(x, weights)
+    ### element 5
+    dE1_rho = -2 * z
+
+    ## line 2
+    ### element 2
+    dC2_theta2 = C1 * D2
+    dD2_theta2 = scipy.special.polygamma(1, theta1 + theta2) - scipy.special.polygamma(1, theta2)
+    ### element 3
+    ### element 4
+    ### element 5
+    H22 = np.matmul(np.transpose(dC2_theta2 * D2 + C1 * dD2_theta2), np.matmul(F1, E1)) + np.matmul(np.transpose(C1 * D2), dB1_theta2)
+    H23 = np.matmul(np.matmul(np.transpose(C1 * D2), F1), dE1_theta3)
+    H24 = np.matmul(np.transpose(C1 * D2), np.matmul(dF1_beta, E1) + np.matmul(F1, dE1_beta))
+    H25 = np.matmul(np.matmul(np.transpose(C1 * D2), F1), dE1_rho)
+
+    # line 3
+    A3 = np.matmul(ii.T, F1)
+    ### element 3
+    ### element 4
+    dA3_beta = np.matmul(ii.T, dF1_beta)
+    ### element 5
+
+    if poly_spec == 0:
+        H11 = np.matmul(np.transpose(dC1_theta1 * D1 + C1 * dD1_theta1), np.matmul(F1, E1)) + np.matmul(np.transpose(C1 * D1), dB1_theta1)
+        H12 = np.matmul(np.transpose(dC1_theta2 * D1 + C1 * dD1_theta2), np.matmul(F1, E1)) + np.matmul(np.transpose(C1 * D1), dB1_theta2)
+        H13 = np.matmul(np.matmul(np.transpose(C1 * D1), F1), dE1_theta3)
+        H14 = np.matmul(np.transpose(C1 * D1), np.matmul(dF1_beta, E1) + np.matmul(F1, dE1_beta))
+        H15 = np.matmul(np.matmul(np.transpose(C1 * D1), F1), dE1_rho)
+        H33 = np.matmul(A3, dE1_theta3)
+        H34 = np.matmul(dA3_beta, E1) + np.matmul(A3, dE1_beta)
+        H35 = np.matmul(A3, dE1_rho)
+    elif poly_spec == 1:
+        H11 = 0
+        H12 = 0
+        H13 = 0
+        H14 = 0
+        H15 = k
+        H33 = np.matmul(A3, dE1_theta3)
+        H34 = np.matmul(dA3_beta, E1) + np.matmul(A3, dE1_beta)
+        H35 = np.matmul(A3, dE1_rho)
+    elif poly_spec == 2:
+        H11 = np.matmul(np.transpose(dC1_theta1 * D1 + C1 * dD1_theta1), np.matmul(F1, E1)) + np.matmul(np.transpose(C1 * D1), dB1_theta1)
+        H12 = np.matmul(np.transpose(dC1_theta2 * D1 + C1 * dD1_theta2), np.matmul(F1, E1)) + np.matmul(np.transpose(C1 * D1), dB1_theta2)
+        H13 = 0
+        H14 = np.matmul(np.transpose(C1 * D1), np.matmul(dF1_beta, E1) + np.matmul(F1, dE1_beta))
+        H15 = np.matmul(np.matmul(np.transpose(C1 * D1), F1), dE1_rho)
+        H23 = 0
+        H33 = 0
+        H34 = 0
+        H35 = k
+    elif poly_spec == 3:
+        H11 = 0
+        H12 = 0
+        H13 = 0
+        H14 = 0
+        H15 = k
+        H23 = 0
+        H33 = 0
+        H34 = 0
+        H35 = k
+
+    ## line 4
+    A4 = -1 * np.transpose(np.matmul(weights, x.T))
+    ### element 4
+    ### element 5
+    H44 = np.matmul(A4, dE1_beta)
+    H45 = np.matmul(A4, dE1_rho)
+
+    ## line 5
+    ### element 5
+    H55 = -1 * np.transpose(np.matmul(z, dE1_rho))
+
+    Hess = pd.concat([pd.DataFrame.from_records(np.concatenate([H11, H12, H13, H14, H15]).flatten()),
+                      pd.DataFrame.from_records(np.concatenate([H12, H22, H23, H24, H25]).flatten()),
+                      pd.DataFrame.from_records(np.concatenate([H13, H23, H33, H34, H35]).flatten()),
+                      pd.DataFrame.from_records(np.concatenate([H14, H24, H34, H44, H45]).flatten()),
+                      pd.DataFrame.from_records(np.c_[H15.T, H25.T, H35.T, H45.T, H55.T]).flatten()]
+                     ).reset_index(drop=True).to_numpy()
+
+    return Hess
