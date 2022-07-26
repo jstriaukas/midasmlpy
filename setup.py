@@ -62,7 +62,7 @@ glmnet_lib = Extension(name='_midasmlpy',
 
 if __name__ == "__main__":
     setup(name="glmnet",
-          version=midasmlpy,
+          version=_VERSION,
           description="Python wrapper for midasmlpy",
           long_description=read('README.rst'),
           long_description_content_type="text/x-rst",
