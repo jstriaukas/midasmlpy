@@ -335,7 +335,7 @@ def mixed_freq_data(data_y, data_ydate, data_x, data_xdate, x_lag, y_lag, horizo
         if est_end == max_date:
             print("Terminal date cannot be later than largest date account for lags. Reset to largest date.")
             est_end = max_date
-    tol = 1e-10
+    #tol = 1e-10
     for i in range(len(data_ydate_num)):
         if data_ydate_num[i] >= est_start:
             loc_start = i
@@ -524,7 +524,7 @@ def mixed_freq_data_single(data_refdate, data_x, data_xdate, x_lag, horizon, est
             print('Terminal date cannot be later than largest date accounting for lags. Reset to largest date possible: ', max_date)
             est_end = max_date
     # Construct reference date data
-    tol = 1e-10
+    #tol = 1e-10
     loc_start = 0
     for i in range(len(data_refdate_num)):
         
@@ -535,6 +535,7 @@ def mixed_freq_data_single(data_refdate, data_x, data_xdate, x_lag, horizon, est
         if data_refdate_num[i] >= est_end:
             loc_end = i
             break
+        
     est_refdate = data_refdate_num[loc_start:loc_end]
     
     for i in range(len(data_refdate_num)):

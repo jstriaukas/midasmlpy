@@ -54,18 +54,17 @@ else:
     library_dirs = None
 
 
-glmnet_lib = Extension(name='_midasmlpy',
-                       sources=['midasmlpy/src/midasmlpy/glmnet5.f90'],
+midasmlpy_lib = Extension(name='_midasmlpy',
+                       sources=['midasmlpy/src/midasmlpy/sglfitF.f90'],
                        extra_f90_compile_args=f_compile_args,
                        library_dirs=library_dirs,
                        )
 
 if __name__ == "__main__":
-    setup(name="glmnet",
+    setup(name="midasmlpy",
           version=_VERSION,
           description="Python wrapper for midasmlpy",
-          long_description=read('README.rst'),
-          long_description_content_type="text/x-rst",
+          long_description=read('README.md'),
           author="Jonas Striaukas and Kris Stern ",
           author_email="jonas.striaukas@gmail.com",
           url="https://github.com/jstriaukas/midasmlpy",
@@ -74,7 +73,7 @@ if __name__ == "__main__":
           ],
           python_requires=">=3.8.*",
           setup_requires=["setuptools"],
-          ext_modules=[glmnet_lib],
+          ext_modules=[midasmlpy_lib],
           packages=['midasmlpy'],
           classifiers=[
               'Development Status :: 5 - Production/Stable',
