@@ -20,7 +20,7 @@ except ImportError:
 
 _VERSION = "1.0.0"
 
-f_compile_args = ['-ffixed-form', '-fdefault-real-8']
+f_compile_args = ['-ffree-form']
 
 
 def read(fname):
@@ -54,8 +54,8 @@ else:
     library_dirs = None
 
 
-midasmlpy_lib = Extension(name='_midasmlpy',
-                       sources=['midasmlpy/src/midasmlpy/sglfitF.f90'],
+midasmlpy_lib = Extension(name='sglfitF',
+                       sources=['midasmlpy/src/sglfitF.f90'],
                        extra_f90_compile_args=f_compile_args,
                        library_dirs=library_dirs,
                        )
