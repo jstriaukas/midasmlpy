@@ -3,3 +3,4 @@ scipy>=1.8.0
 sphinx>=4.4.0
 pandas>=1.4.3
 pytest>=7.1.2
+matplotlib>=3.6.0
