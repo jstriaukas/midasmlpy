@@ -63,7 +63,7 @@ midasmlpy_lib = Extension(name='sglfitF',
 if __name__ == "__main__":
     setup(name="midasmlpy",
           version=_VERSION,
-          description="Python wrapper for midasmlpy",
+          description="Python wrapper for midasml",
           long_description=read('README.md'),
           author="Jonas Striaukas and Kris Stern ",
           author_email="jonas.striaukas@gmail.com",

@@ -20,13 +20,14 @@ High-dimensional mixed frequency time-series data can also be easily manipulated
 - A MATLAB implementation of the midasml method is available [here](https://github.com/jstriaukas/midasml_mat).
 - An R implementation of the midasml method is available [here](https://github.com/jstriaukas/midasml).
 
-## Details on the Fortran code
+## Installation
 
-The main subroutines are written in Fortran 90. Using Python <tt>3.8.x</tt>, the code is compiled for several OS: 
+To install the midasmlpy package, download the files and at the directory of files run:
+pip install .
 
-- sglfitF.cpython-38-x86_64-linux-gnu.so - compiled for Linux. Version: 20.04.4. Compiled with <tt>f2py3</tt> and <tt>gfortran</tt> compiler.
-- sglfitF.cp38-win_amd64.pyd - compiled for Windows. Version: Windows 10. Compiled with <tt>f2py</tt> and <tt>gfortran</tt> compiler.
-- sglfitF.cpython-38-darwin.so - complied for macOS. Version: Monterey 12.3.1. Compiled with <tt>numpy.f2py</tt> and <tt>gfortran</tt> compiler.
+
+
+
 
 In case you are running the code on a different platform, you can compile the Fortran code <tt>sglfitF.f90</tt> by using <tt>f2py</tt> which is part of <tt>numpy</tt>. 
 
