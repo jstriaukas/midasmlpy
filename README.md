@@ -3,7 +3,7 @@ Python implementation of the midasml approach - providing **estimation** and **p
 
 ## Authors
 * Jonas Striaukas - [jstriaukas](https://github.com/jstriaukas)
-* Kris Stern - [slim-patchy](https://github.com/slim-patchy)
+* Kris Stern - [krisstern](https://github.com/krisstern)
 
 ## About
 
