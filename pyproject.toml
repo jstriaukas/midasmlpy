@@ -1,0 +1,16 @@
+[project]
+name = "midasmlpy"
+description = "The midasmlpy package implements estimation and prediction methods for high-dimensional mixed-frequency (MIDAS) time-series and panel data in regression models."
+readme = "README.md"
+authors = [
+    { name = "Jonas Striaukas", email = "jonas.striaukas@gmail.com" },
+    { name = "Kris Stern", emaiL = "krisstern@outlook.com"}
+]
+requires-python = ">=3.8"
+
+[project.urls]
+"Homepage" = "https://github.com/jstriaukas/midasmlpy"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
