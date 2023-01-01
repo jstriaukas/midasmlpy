@@ -29,7 +29,7 @@ pip install .
 
 ## Development
 
-To install the midasmlpy package for development, do the following instead:
+To install the midasmlpy package for development, do the following instead in “editable” mode:
 ```shell
 pip install -e .
 ```
