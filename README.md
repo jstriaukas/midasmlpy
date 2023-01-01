@@ -34,6 +34,13 @@ To install the midasmlpy package for development, do the following instead in â€
 pip install -e .
 ```
 
+## Testing
+
+To run the tests, run:
+```shell
+pytest --pyargs src
+```
+
 In case you are running the code on a different platform, you can compile the Fortran code <tt>sglfitF.f90</tt> by using <tt>f2py</tt> which is part of <tt>numpy</tt>. 
 
 [^1]: Babii, A., Ghysels, E., & Striaukas, J. Machine learning time series regressions with an application to nowcasting, (2022) *Journal of Business & Economic Statistics*, Volume 40, Issue 3, 1094-1106. https://doi.org/10.1080/07350015.2021.1899933. 
