@@ -23,7 +23,16 @@ High-dimensional mixed frequency time-series data can also be easily manipulated
 ## Installation
 
 To install the midasmlpy package, download the files and at the directory of files run:
+```shell
 pip install .
+```
+
+## Development
+
+To install the midasmlpy package for development, do the following instead:
+```shell
+pip install -e .
+```
 
 In case you are running the code on a different platform, you can compile the Fortran code <tt>sglfitF.f90</tt> by using <tt>f2py</tt> which is part of <tt>numpy</tt>. 
 
