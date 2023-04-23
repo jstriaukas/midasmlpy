@@ -41,7 +41,7 @@ def lb(degree, a=0, b=1, jmax=None, X=None):
     if degree > 0:
         for i in range(1, degree+1, 1):
             P[:, i+1] = ((2*i+1)/(i+1)) * P[:, 1] * P[:, i] - i/(i+1) * P[:, i-1]
-            Psi[:, i] = np.sqrt((2*i + 1) / (b-a)) @ P[:, i]
+            Psi[:, i] = np.sqrt((2*i + 1) / (b-a)) * P[:, i]
 
     return Psi
 
