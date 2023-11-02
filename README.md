@@ -14,6 +14,14 @@ For more information on the *midasmlpy* approach there are references in the foo
 The package is equipped with the fast implementation of the sparse-group LASSO estimator by means of proximal block coordinate descent. 
 High-dimensional mixed frequency time-series data can also be easily manipulated with functions provided in the package.
 
+## The .f90 source files
+
+These can be found at the [midasmlpy/src](./midasmlpy/src) directory.
+Compiled `.so` files can be found at [midasmlpy/compiled](./midasmlpy/compiled) directory.
+Please note that we have taken the `.f90` source code for sparse-group LASSO from the repo of the R package `sparsegl` on hosted GitHub at https://github.com/dajmcdon/sparsegl.
+We have taken their source code in accordance with their GPL-2.0 license as is without any modification as of November 2nd, 2023 UTC.
+What can be found at [midasmlpy/src/sparsegl](./midasmlpy/src/sparsegl) are copies of their `.f90` code.
+
 ## Software in other languages
 
 - A Julia implementation of the midasml method is available [here](https://github.com/ababii/Pythia.jl).
