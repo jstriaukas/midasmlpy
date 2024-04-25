@@ -11,25 +11,26 @@ SUBROUTINE sparse_four (bn,bs,ix,iy,gam,nobs,nvars,x,y,pf,pfl1,dfmax,pmax,nlam,&
   DOUBLE PRECISION, PARAMETER :: mfl = 1.0E-6
   INTEGER, PARAMETER :: mnlam = 6
   INTEGER:: isDifZero
-  INTEGER:: mnl, intr
-  INTEGER:: bn
-  INTEGER:: bs(bn)
-  INTEGER:: ix(bn)
-  INTEGER:: iy(bn)
-  INTEGER:: nobs, nvars, dfmax, pmax, nlam, nalam, npass, jerr, maxit
-  INTEGER:: activeGroup(pmax)
-  INTEGER:: nbeta(nlam)
-  DOUBLE PRECISION :: flmin, eps, alsparse, max_gam, d, maxDif, al, alf, snorm
+  INTEGER:: mnl
+INTEGER, INTENT(IN) :: bn
+  INTEGER, INTENT(IN) :: bs(bn)
+  INTEGER, INTENT(IN) :: ix(bn)
+  INTEGER, INTENT(IN) :: iy(bn)
+  INTEGER, INTENT(IN) :: nobs, nlam, nvars, dfmax, pmax, maxit, intr
+  INTEGER, INTENT(OUT) :: nalam, npass, jerr
+  INTEGER, INTENT(OUT) :: activeGroup(pmax)
+  INTEGER, INTENT(OUT) :: nbeta(nlam)
+  DOUBLE PRECISION :: flmin, eps, alsparse, max_gam, maxDif, al, alf, snorm, d
   DOUBLE PRECISION, INTENT(in) :: x(nobs,nvars)
   DOUBLE PRECISION, INTENT(in) :: y(nobs)
   DOUBLE PRECISION, INTENT(in) :: pf(bn)
   DOUBLE PRECISION, INTENT(in) :: pfl1(nvars)
-  DOUBLE PRECISION :: ulam(nlam)
-  DOUBLE PRECISION :: gam(bn)
+  DOUBLE PRECISION, INTENT(IN) :: ulam(nlam)
+  DOUBLE PRECISION, INTENT(IN) :: gam(bn)
   DOUBLE PRECISION, INTENT(in) :: lb(bn), ub(bn)
-  DOUBLE PRECISION :: b0(nlam)
-  DOUBLE PRECISION :: beta(nvars,nlam)
-  DOUBLE PRECISION :: alam(nlam), mse(nlam)
+  DOUBLE PRECISION, INTENT(OUT) :: beta(nvars,nlam)
+  DOUBLE PRECISION, INTENT(OUT) :: b0(nlam)
+  DOUBLE PRECISION, INTENT(OUT) :: alam(nlam), mse(nlam)
 
   DOUBLE PRECISION, DIMENSION (:), ALLOCATABLE :: s !need for sparse_four
   DOUBLE PRECISION, DIMENSION (:), ALLOCATABLE :: b
@@ -89,7 +90,6 @@ SUBROUTINE sparse_four (bn,bs,ix,iy,gam,nobs,nvars,x,y,pf,pfl1,dfmax,pmax,nlam,&
      ga(g) = SQRT(DOT_PRODUCT(u, u))
      DEALLOCATE(u)
   ENDDO
-  CALL rchkusr()
   DO vl_iter = 1, nvars
      al0 = MAX(al0, ABS(vl(vl_iter))) ! Infty norm of X'y, big overkill for lam_max
   ENDDO
@@ -98,7 +98,6 @@ SUBROUTINE sparse_four (bn,bs,ix,iy,gam,nobs,nvars,x,y,pf,pfl1,dfmax,pmax,nlam,&
   l = 0
   tlam = 0.0D0
   DO WHILE (l < nlam) !! This is the start of the loop over all lambda values...
-     CALL rchkusr()
      al0 = al ! store old al value on subsequent loops, first set to al
      IF (flmin >= 1.0D0) THEN ! user supplied lambda value, break out of everything
         l = l+1
@@ -122,7 +121,6 @@ SUBROUTINE sparse_four (bn,bs,ix,iy,gam,nobs,nvars,x,y,pf,pfl1,dfmax,pmax,nlam,&
      CALL strong_rule (is_in_S_set, ga, pf, tlam, alsparse) !uses s_set instead of e_set...
      ! --------- outer loop ---------------------------- !
      DO
-        CALL rchkusr()
         oldbeta(0) = b(0)
         IF (ni > 0) THEN
            DO j = 1, ni
@@ -132,7 +130,6 @@ SUBROUTINE sparse_four (bn,bs,ix,iy,gam,nobs,nvars,x,y,pf,pfl1,dfmax,pmax,nlam,&
         ENDIF
         ! --inner loop-------------------------------------
         DO
-           CALL rchkusr()
            ! print *, "This is where we enter the inner loop"
            npass = npass + 1
            maxDif = 0.0D0
@@ -179,7 +176,6 @@ SUBROUTINE sparse_four (bn,bs,ix,iy,gam,nobs,nvars,x,y,pf,pfl1,dfmax,pmax,nlam,&
         IF (violation == 1) CYCLE
         ! Need to compute vl/ga for the ones that aren't already updated, before kkt_check
         DO g = 1, bn
-           CALL rchkusr()
            IF (is_in_S_set(g) == 0) THEN
               startix = ix(g)
               endix = iy(g)
@@ -206,7 +202,6 @@ SUBROUTINE sparse_four (bn,bs,ix,iy,gam,nobs,nvars,x,y,pf,pfl1,dfmax,pmax,nlam,&
            alam(1) = al / MAX(alf, .99D0) ! store previous, larger value
         ENDIF
      ENDIF
-     CALL rchkusr()
      ! PRINT *, "Here is where the final update starts"
      IF(ni > pmax) THEN
         jerr = -10000 - l
@@ -327,7 +322,6 @@ SUBROUTINE spmat_four (bn,bs,ix,iy,gam,nobs,nvars,x,xidx,xcptr,nnz,y,pf,pfl1,&
      ga(g) = SQRT(DOT_PRODUCT(u,u))
      DEALLOCATE(u)
   ENDDO
-  CALL rchkusr()
   DO vl_iter = 1, nvars
      al0 = MAX(al0, ABS(vl(vl_iter))) ! Infty norm of X'y, big overkill for lam_max
   ENDDO
@@ -336,7 +330,6 @@ SUBROUTINE spmat_four (bn,bs,ix,iy,gam,nobs,nvars,x,xidx,xcptr,nnz,y,pf,pfl1,&
   l = 0
   tlam = 0.0D0
   DO WHILE (l < nlam) !! This is the start of the loop over all lambda values...
-     CALL rchkusr()
      al0 = al ! store old al value on subsequent loops, first set to al
      IF (flmin >= 1.0D0) THEN ! user supplied lambda value, break out of everything
         l = l + 1
@@ -361,7 +354,6 @@ SUBROUTINE spmat_four (bn,bs,ix,iy,gam,nobs,nvars,x,xidx,xcptr,nnz,y,pf,pfl1,&
      CALL strong_rule (is_in_S_set, ga, pf, tlam, alsparse) !uses s_set instead of e_set...
      ! --------- outer loop ---------------------------- !
      DO
-        CALL rchkusr()
         oldbeta(0) = b(0)
         IF (ni > 0) THEN
            DO j = 1, ni
@@ -371,7 +363,6 @@ SUBROUTINE spmat_four (bn,bs,ix,iy,gam,nobs,nvars,x,xidx,xcptr,nnz,y,pf,pfl1,&
         ENDIF
         ! --inner loop-------------------------------------
         DO
-           CALL rchkusr()
            npass = npass + 1
            maxDif = 0.0D0
            isDifZero = 0 !Boolean to check if b-oldb nonzero. Unnec, in fn.
@@ -416,7 +407,6 @@ SUBROUTINE spmat_four (bn,bs,ix,iy,gam,nobs,nvars,x,xidx,xcptr,nnz,y,pf,pfl1,&
         IF (violation == 1) CYCLE
         ! Need to compute vl/ga for the ones that aren't already updated, before kkt_check
         DO g = 1, bn
-           CALL rchkusr()
            IF (is_in_S_set(g) == 0) THEN
               startix = ix(g)
               endix = iy(g)

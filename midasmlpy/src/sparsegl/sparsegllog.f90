@@ -11,24 +11,25 @@ SUBROUTINE log_sparse_four (bn,bs,ix,iy,gam,nobs,nvars,x,y,pf,pfl1,dfmax,pmax,&
   INTEGER, PARAMETER :: mnlam = 6
   INTEGER:: isDifZero
   INTEGER:: mnl
-  INTEGER:: bn
-  INTEGER:: bs(bn)
-  INTEGER:: ix(bn)
-  INTEGER:: iy(bn)
-  INTEGER:: nobs, nvars, dfmax, pmax, nlam, nalam, npass, jerr, maxit, intr
-  INTEGER:: activeGroup(pmax)
-  INTEGER:: nbeta(nlam)
+  INTEGER, INTENT(IN) :: bn
+  INTEGER, INTENT(IN) :: bs(bn)
+  INTEGER, INTENT(IN) :: ix(bn)
+  INTEGER, INTENT(IN) :: iy(bn)
+  INTEGER, INTENT(IN) :: nobs, nlam, nvars, dfmax, pmax, maxit, intr
+  INTEGER, INTENT(OUT) :: nalam, npass, jerr
+  INTEGER, INTENT(OUT) :: activeGroup(pmax)
+  INTEGER, INTENT(OUT) :: nbeta(nlam)
   DOUBLE PRECISION :: flmin, eps, alsparse, max_gam, maxDif, al, alf, snorm, d
   DOUBLE PRECISION, INTENT(in) :: x(nobs,nvars)
   DOUBLE PRECISION, INTENT(in) :: y(nobs)
   DOUBLE PRECISION, INTENT(in) :: pf(bn)
   DOUBLE PRECISION, INTENT(in) :: pfl1(nvars)
-  DOUBLE PRECISION :: ulam(nlam)
-  DOUBLE PRECISION :: gam(bn)
+  DOUBLE PRECISION, INTENT(IN) :: ulam(nlam)
+  DOUBLE PRECISION, INTENT(IN) :: gam(bn)
   DOUBLE PRECISION, INTENT(in) :: lb(bn), ub(bn)
-  DOUBLE PRECISION :: beta(nvars,nlam)
-  DOUBLE PRECISION :: b0(nlam)
-  DOUBLE PRECISION :: alam(nlam)
+  DOUBLE PRECISION, INTENT(OUT) :: beta(nvars,nlam)
+  DOUBLE PRECISION, INTENT(OUT) :: b0(nlam)
+  DOUBLE PRECISION, INTENT(OUT) :: alam(nlam)
 
   DOUBLE PRECISION, DIMENSION (:), ALLOCATABLE :: s !need for log_sparse_four
   DOUBLE PRECISION, DIMENSION (:), ALLOCATABLE :: b
@@ -91,7 +92,6 @@ SUBROUTINE log_sparse_four (bn,bs,ix,iy,gam,nobs,nvars,x,y,pf,pfl1,dfmax,pmax,&
      ga(g) = SQRT(DOT_PRODUCT(u, u))
      DEALLOCATE(u)
   ENDDO
-  CALL rchkusr()
   DO vl_iter = 1, nvars
      al0 = MAX(al0, ABS(vl(vl_iter))) ! Infty norm of X'y, big overkill for lam_max
   ENDDO
@@ -103,7 +103,6 @@ SUBROUTINE log_sparse_four (bn,bs,ix,iy,gam,nobs,nvars,x,y,pf,pfl1,dfmax,pmax,&
      ! PRINT *, "Lambda iter =  and al = "
      ! PRINT *, l
      ! PRINT *, al
-     CALL rchkusr()
      al0 = al
      IF (flmin >= 1.0D0) THEN
         l = l + 1
@@ -125,7 +124,6 @@ SUBROUTINE log_sparse_four (bn,bs,ix,iy,gam,nobs,nvars,x,y,pf,pfl1,dfmax,pmax,&
      ! uses s_set instead of e_set...
      ! --------- outer loop ---------------------------- !
      DO
-        CALL rchkusr()
         oldbeta(0) = b(0)
         IF (ni > 0) THEN
            DO j = 1, ni
@@ -136,7 +134,6 @@ SUBROUTINE log_sparse_four (bn,bs,ix,iy,gam,nobs,nvars,x,y,pf,pfl1,dfmax,pmax,&
         ! --inner loop-------------------------------------
         DO
            ! print *, "This is where we enter the inner loop"
-           CALL rchkusr()
            npass = npass + 1
            maxDif = 0.0D0
            isDifZero = 0 !Boolean to check if b-oldb nonzero. Unnec, in fn.
@@ -187,7 +184,6 @@ SUBROUTINE log_sparse_four (bn,bs,ix,iy,gam,nobs,nvars,x,y,pf,pfl1,dfmax,pmax,&
         IF (violation == 1) CYCLE
         ! Need to compute vl/ga for the ones that aren't already updated,
         ! before log_kkt_check
-        CALL rchkusr()
         DO g = 1, bn
            IF (is_in_S_set(g) == 0) THEN
               startix = ix(g)
@@ -343,7 +339,6 @@ SUBROUTINE log_spmat_four (bn,bs,ix,iy,gam,nobs,nvars,x,xidx,xcptr,nnz,y,pf,pfl1
      ga(g) = SQRT(DOT_PRODUCT(u,u))
      DEALLOCATE(u)
   ENDDO
-  CALL rchkusr()
   DO vl_iter = 1, nvars
      al0 = MAX(al0, ABS(vl(vl_iter))) ! Infty norm of X'y, big overkill for lam_max
   ENDDO
@@ -355,7 +350,6 @@ SUBROUTINE log_spmat_four (bn,bs,ix,iy,gam,nobs,nvars,x,xidx,xcptr,nnz,y,pf,pfl1
      ! PRINT *, "Lambda iter =  and al = "
      ! PRINT *, l
      ! PRINT *, al
-     CALL rchkusr()
      al0 = al
      IF (flmin >= 1.0D0) THEN
         l = l + 1
@@ -377,7 +371,6 @@ SUBROUTINE log_spmat_four (bn,bs,ix,iy,gam,nobs,nvars,x,xidx,xcptr,nnz,y,pf,pfl1
      ! uses s_set instead of e_set...
      ! --------- outer loop ---------------------------- !
      DO
-        CALL rchkusr()
         oldbeta(0) = b(0)
         IF (ni > 0) THEN
            DO j = 1, ni
@@ -387,7 +380,6 @@ SUBROUTINE log_spmat_four (bn,bs,ix,iy,gam,nobs,nvars,x,xidx,xcptr,nnz,y,pf,pfl1
         ENDIF
         ! --inner loop-------------------------------------
         DO
-           CALL rchkusr()
            npass = npass + 1
            maxDif = 0.0D0
            isDifZero = 0 ! Boolean to check if b-oldb nonzero. Unnec, in fn.
@@ -435,7 +427,6 @@ SUBROUTINE log_spmat_four (bn,bs,ix,iy,gam,nobs,nvars,x,xidx,xcptr,nnz,y,pf,pfl1
         IF (violation == 1) CYCLE
         ! Need to compute vl/ga for the ones that aren't already updated,
         ! before log_kkt_check
-        CALL rchkusr()
         DO g = 1, bn
            IF (is_in_S_set(g) == 0) THEN
               startix = ix(g)

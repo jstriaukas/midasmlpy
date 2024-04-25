@@ -2,6 +2,7 @@
 from datetime import datetime
 from unicodedata import numeric
 
+# Finds time difference between two given times
 #time input style: [year,month,day,hour,min,sec]
 def diff_time_mf(time1, time2, origin, units = ["auto", "secs", "mins", "hours", "days", "weeks"]):
     ini_time1 = time1
@@ -36,6 +37,7 @@ def diff_time_mf(time1, time2, origin, units = ["auto", "secs", "mins", "hours",
             result.append(86400 * delta_days + delta_sec)
     return result
 
+# Lag a number by a given period and unit
 def lag_num(x_lag, period, unit):
     if type(x_lag) == int or float:
         return x_lag
@@ -73,6 +75,7 @@ def lag_num(x_lag, period, unit):
         x_lag = round(multiplier / (period / nhoursPerDay / 60 / 60))
     return x_lag
 
+# Calculate the mode of a given dataset
 def mode_midasml(data):
     nobs = len(data)
     data = data.tolist()
@@ -99,6 +102,7 @@ def mode_midasml(data):
 import statistics
 import numpy as np
 
+# Calculate the frequency of data points in a given date vector
 def data_freq(DateVec):
     ini_DV = DateVec
     DateVec = np.array(DateVec)
@@ -191,7 +195,8 @@ def data_freq(DateVec):
         "period": period,
         "unit": unit
     }
-    
+
+# Check if two dates match   
 def dateMatch(x, y):
     n = len(x)
     x_out = n * [0]
@@ -216,6 +221,8 @@ def dateMatch(x, y):
     return x_out
 
 from datetime import datetime
+
+# Check if a given date is in the correct format
 # ISO Date Format: 2021-07-07 06:36:55
 # Formatted Time: 23/06/21 10:33:02
 def corr_datetype(date):
@@ -233,6 +240,7 @@ def corr_datetype(date):
             date[i] = year + "-" + month + "-" + day + " " + x[1]
     return date
 
+# Calculate the beginning of a month for a given date
 def monthBegin(x):
     x = corr_datetype(x)
     df = datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
@@ -240,6 +248,14 @@ def monthBegin(x):
     return df
 
 import calendar
+from datetime import datetime
+from unicodedata import numeric
+import statistics
+import numpy as np
+from datetime import datetime
+import calendar
+
+# Calculate the end of a month for a given date
 def monthEnd(x):
     x = corr_datetype(x)
     df = datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
@@ -250,6 +266,7 @@ def monthEnd(x):
     df = df.replace(day = last_day, hour = 0, minute = 0, second = 0)
     return df
 
+# Check if a given dataset contains any missing values
 def is_na(data):
     data_temp = []
     for i, y in enumerate(data):
@@ -257,7 +274,8 @@ def is_na(data):
             data_temp.append(y)
         else: continue
     return data_temp
-    
+
+# Convert a string into a date vector    
 def date_vec(s):
     w = 6
     h = len(s)
@@ -271,6 +289,7 @@ def date_vec(s):
         mat[i][5] = s[i].second
     return mat
 
+# Handle mixed frequency data
 def mixed_freq_data(data_y, data_ydate, data_x, data_xdate, x_lag, y_lag, horizon, est_start, est_end, disp_flag = True):
     data_y = is_na(data_y)
     data_ydate = is_na(data_ydate)
@@ -349,7 +368,8 @@ def mixed_freq_data(data_y, data_ydate, data_x, data_xdate, x_lag, y_lag, horizo
     for i in range(len(data_ydate_num)):
         if data_ydate_num[i] >= max_date:
             loc_forecast_end = i
-            break
+        else:
+            loc_forecast_end = i
     if loc_end + 1 <= loc_forecast_end:
         out_y = data_y[loc_end + 1: loc_forecast_end + 1]
         out_ydate = data_ydate_num[loc_end + 1: loc_forecast_end + 1]
@@ -422,7 +442,7 @@ def mixed_freq_data(data_y, data_ydate, data_x, data_xdate, x_lag, y_lag, horizo
         print("Frequency of Data Y:", period_y, date_format[unit_y])
         print("Frequency of Data X:", period_x, date_format[unit_x])
         print("Start Date: ", est_start)
-        print("Start Date: ", est_end)
+        print("End Date: ", est_end)
         print("Mixed frequency regression time frame:")
         for m in [0, 1, nobs - 1]:
             print("Reg Y(", est_ydate[m], ")`s on: ")
@@ -456,7 +476,8 @@ def mixed_freq_data(data_y, data_ydate, data_x, data_xdate, x_lag, y_lag, horizo
         "min_date": min_date,
         "max_date": max_date
     }
-    
+
+# Handle mixed frequency data for a single variable
 def mixed_freq_data_single(data_refdate, data_x, data_xdate, x_lag, horizon, est_start, est_end, disp_flag = True):
     data_refdate = is_na(data_refdate)
     data_x = is_na(data_x)
@@ -654,3 +675,4 @@ def mixed_freq_data_single(data_refdate, data_x, data_xdate, x_lag, horizon, est
 #    result = mixed_freq_data(data_y, data_ydate, data_x, data_xdate, x_lag, y_lag, horizon, #est_start, est_end, disp_flag = True)
     
  #   print(result)
+
