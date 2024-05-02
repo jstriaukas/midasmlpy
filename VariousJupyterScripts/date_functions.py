@@ -416,6 +416,7 @@ def legendre_polynomial(x, d):
     Returns:
         float: The value of the Legendre polynomial at x for degree d.
     """
+ 
     if d == 0:
         return 1
     elif d == 1:
@@ -424,7 +425,7 @@ def legendre_polynomial(x, d):
         return ((2 * d - 1) * x * legendre_polynomial(x, d - 1) - (d - 1) * legendre_polynomial(x, d - 2)) / d
 
 # Create matrix of legendre polynomials for lags and degrees
-def legendre_matrix_create(x_lags, legendre_degree = 3):
+def legendre_matrix_create(x_lags, legendre_degree = 3, a=0, b=1):
     """
     This function creates a matrix of Legendre polynomials for the input x_lags and legendre_degree.
 
@@ -435,11 +436,19 @@ def legendre_matrix_create(x_lags, legendre_degree = 3):
     Returns:
         numpy.ndarray: A matrix of Legendre polynomials for the given lags and degrees.
     """
-    # Create list of equally spaced values between -1 and 1 for use in legendre polynomials
-    x_values = np.linspace(-1, 1, num=x_lags)
-    # Loop through the lags and degrees to create a lag x degree matrix of legendre polynomials
-    legendre_matrix = [[legendre_polynomial(x, n) for n in range(legendre_degree)] for x in x_values]
-    return np.array(legendre_matrix)
+    # Create list of equally spaced values between a and b for use in legendre polynomials
+    x_values = np.linspace(a, b, num=x_lags)
+    # Shift the x values to be between -1 and 1
+    x_values = 2 * x_values / (b-a) - ((b+a) / (b-a))
+    # Create matrix to store legendre polynomials
+    legendre_matrix = np.zeros((x_lags, legendre_degree))
+    psi = np.zeros((x_lags, legendre_degree))
+    # Calculate the Legendre polynomials for each x value and degree
+    for x in range(len(x_values)):
+        for n in range(legendre_degree):
+            legendre_matrix[x,n] = legendre_polynomial(x_values[x], n)
+            psi[x,n] = np.sqrt((2 * n + 1) / (b-a)) * legendre_matrix[x,n]
+    return psi
 
 def data_transform(Y, Y_date, X, X_date, x_lags, y_lags, horizon, legendre_degree=3, standardize = True):
     """

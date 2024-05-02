@@ -2,7 +2,9 @@ import numpy as np
 import midasmlpy.src.sparsegl.sparsegllog_module as sgl # the sparse group lasso module from fortran
 from scipy.sparse.linalg import svds
 from sklearn.metrics import accuracy_score, roc_auc_score
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
+import random
+random.seed(111)
 
 ########################################################################################
 
@@ -32,7 +34,7 @@ def calc_gamma(x, ix, iy, bn):
         
         if ncols > 2:
             # Calculate the largest singular value squared 
-            singular_values = svds(submatrix, k=1, return_singular_vectors=False)
+            singular_values = svds(submatrix, k=1, return_singular_vectors=False, random_state = 42)
             gamma[g] = singular_values[0]**2
         elif ncols == 2:
             gamma[g] = maxeig2(submatrix)
@@ -83,23 +85,26 @@ def sgLasso_estimation(x, y, group_size, alsparse, pmax = 100, intr = True, nlam
 
     nobs,nvars = x.shape[0], x.shape[1] # Number of observations and features
     eps = 1e-8 # Convergence threshold
-    maxit = 3e8 # Maximum number of iterations
+    maxit = 1000000 # Maximum number of iterations
     bn = x.shape[1]//group_size # Number of groups as an integer
     bs = np.full(bn, group_size, dtype=int) # Elements in groups
     ix, iy =  list(range(0, nvars, group_size)), list(range(group_size-1, nvars, group_size)) # Placement og first column of each group in x
     gam = 0.25 * calc_gamma(x, ix, iy, bn) # Calculate gamma values for each group of features (columns) 
-    pf, pfl1 = np.sqrt(bs),np.ones(nvars) # Penalty factors for L2 and L1 penalties
+    pf, pfl1 = np.sqrt(bs),np.ones(nvars).round(1) # Penalty factors for L2 and L1 penalties
     dfmax = bn + 1 # Maximum number of groups
-    ulam = np.ones(nlam) # Sequence of lambda values
     flmin = 0.01 if nobs < nvars else 1e-04
     lb,ub = np.full(bn, -np.inf),np.full(bn, np.inf) # Lower and upper bounds for the coefficients
     
-    nalam, b0, beta, activeGroup, nbeta, alam, npass, jerr = sgl.log_sparse_four(x = x,
+    _nalam, b0, beta, _activeGroup, _nbeta, alam, npass, jerr = sgl.log_sparse_four(x = x,
                     y = y, bn = bn, bs = bs, ix = ix, iy = iy, gam = gam, nobs = nobs, 
                     nvars = nvars, pf = pf, pfl1 = pfl1, dfmax = dfmax, pmax = pmax, 
                     nlam = nlam, flmin = flmin, ulam = ulam, eps = eps, maxit = maxit, 
                     intr = intr, lb = lb, ub = ub, alsparse = alsparse)
-    return nalam, b0, beta, activeGroup, nbeta, alam, npass, jerr
+    if jerr != 0:
+        raise ValueError("Error in the sparse group lasso estimation.")
+    if npass == maxit:
+        raise ValueError("Failed to converge in the sparse group lasso estimation.")
+    return b0, beta, alam, npass, jerr
 
 ########################################################################################
 
@@ -150,7 +155,7 @@ def evaluate_binomial(x, y, b0, beta,eval = 'auc', threshold=0.5):
             raise ValueError("Invalid evaluation metric. Use 'accuracy' or 'auc'.")
     return evaluation_score
 
-def cvlambda(x,y,alam,group_size, alsparse, pmax, intr,k_folds):
+def cvlambda(x,y,alam,group_size, alsparse, pmax, intr,k_folds = 5):
     """
     Perform k-fold cross-evaluation for logistic regression models 
     to evaluate the performance of each lambda.
@@ -168,16 +173,17 @@ def cvlambda(x,y,alam,group_size, alsparse, pmax, intr,k_folds):
     - mean_performace (ndarray): An array of mean AUC scores for each value of lambda.
     """
     # Split the data into k_folds
-    kf = KFold(n_splits=k_folds)
+    kf = StratifiedKFold(n_splits=k_folds, shuffle=True, random_state=42)
+
     # initialize performance list
     performance = []
-    for train_index, test_index in kf.split(x):
+    for train_index, test_index in kf.split(x,y):
         # Based on the split, create the training and test data for this fold
         x_train, x_test = x[train_index], x[test_index]
         y_train, y_test = y[train_index], y[test_index]
         # Estimate the model on the training data
-        _nalam, b0, beta, _activeGroup, _nbeta, _alam, _npass, _jerr = sgLasso_estimation(x_train, y_train, group_size, alsparse, pmax = pmax, intr = intr, ulam = alam)
-        performance.append(evaluate_binomial(x_test, y_test, b0, beta,eval = 'auc', threshold=0.5))
+        b0test, betatest, _alam, _npass, _jerr = sgLasso_estimation(x_train, y_train, group_size, alsparse, pmax = pmax, intr = intr, ulam = alam)
+        performance.append(evaluate_binomial(x_test, y_test, b0test, betatest,eval = 'auc', threshold=0.5))
 
     performance = np.array(performance)
     return np.mean(performance, axis=0) # return the mean performance across all folds
@@ -205,18 +211,14 @@ def bestmodel(x,y,group_size, alsparse, nlam = 100, pmax = 100, intr = True,k_fo
         - 'best_lambda' (int): The index of the best lambda value.
     """
     # Find best model
-    _nalam, b0, beta, _activeGroup, _nbeta, alam, _npass, _jerr = sgLasso_estimation(x, y, group_size, alsparse, pmax, intr)
+    b0, beta, alam, _npass, _jerr = sgLasso_estimation(x, y, group_size, alsparse, pmax, intr)
 
     # Find mean performance for each lambda
     mean_performance = cvlambda(x,y,alam,group_size, alsparse, pmax, intr,k_folds)
     best_lambda = np.argmax(mean_performance)
-    max_performance = mean_performance[best_lambda]
-    b0 = b0[best_lambda] 
-    beta = beta[:,best_lambda] 
-    return {
-        "b0": b0,
-        "beta": beta,
-        "maximized_performance": max_performance,
-        "best_lambda": best_lambda
-    }
+    return {'b0':b0[best_lambda], 
+            'beta': beta[:,best_lambda], 
+            'maximized_performance': mean_performance[best_lambda], 
+            'best_lambda': best_lambda}
+    
     
