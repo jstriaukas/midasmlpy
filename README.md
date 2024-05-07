@@ -2,6 +2,7 @@
 Python implementation of the midasml approach - providing **estimation** and **prediction** methods for high-dimensional mixed-frequency time-series data
 
 ## Authors
+* Marcus Egelund-Müller - [Mem03](https://github.com/Mem03)
 * Jonas Striaukas - [jstriaukas](https://github.com/jstriaukas)
 * Kris Stern - [krisstern](https://github.com/krisstern)
 
