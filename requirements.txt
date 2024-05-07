@@ -1,7 +1,5 @@
 numpy
 scipy
-sphinx
-pandas
-pytest
-matplotlib
-tox
+sklearn
+unicodedata
+datetime
