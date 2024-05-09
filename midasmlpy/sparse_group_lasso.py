@@ -1,5 +1,5 @@
 import numpy as np
-import midasmlpy.compiled.sparsegllog_module as sgl # the sparse group lasso module from fortran
+import sparsegllog_compiled # the sparse group lasso module from fortran
 from scipy.sparse.linalg import svds
 from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import StratifiedKFold
@@ -89,7 +89,7 @@ def sgLasso_estimation(x, y, group_size, alsparse, pmax = 100, intr = True, nlam
     flmin = 0.01 if nobs < nvars else 1e-04
     lb,ub = np.full(bn, -np.inf),np.full(bn, np.inf) # Lower and upper bounds for the coefficients
     
-    _nalam, b0, beta, _activeGroup, _nbeta, alam, npass, jerr = sgl.log_sparse_four(x = x,
+    _nalam, b0, beta, _activeGroup, _nbeta, alam, npass, jerr = sparsegllog_compiled.log_sparse_four(x = x,
                     y = y, bn = bn, bs = bs, 
                     ix = ix + 1, iy = iy + 1, # iy and ix are +1 as fortran is index 1 while python is index 0
                     gam = gam, nobs = nobs, 

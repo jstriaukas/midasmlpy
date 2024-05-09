@@ -381,17 +381,31 @@ def mixed_freq_data(data_y, data_ydate, data_x, data_xdate, x_lag, y_lag, horizo
         else:
             est_x[t][:] = data_x[loc - horizon  : loc -horizon - x_lag : -1]
             est_xdate[t][:] = data_xdate_num[loc - horizon  : loc -horizon - x_lag : -1]
+    # All values of y dont always have values for y_lag, so the values returning an empty list of x are removed in the lists
+    if y_lag > 0:
+        indices_to_keep1 = [i for i, row in enumerate(est_lag_y) if row]
+
+        # Filter all lists based on these indices
+        est_x = [est_x[i] for i in indices_to_keep1]
+        est_xdate = [est_xdate[i] for i in indices_to_keep1]
+        est_y = [est_y[i] for i in indices_to_keep1]
+        est_ydate = [est_ydate[i] for i in indices_to_keep1]
+        est_lag_y = [est_lag_y[i] for i in indices_to_keep1]
+        est_lag_ydate = [est_lag_ydate[i] for i in indices_to_keep1]
 
     # All values of y dont always have values for x, so the values returning an empty list of x are removed in the lists
-    indices_to_keep = [i for i, row in enumerate(est_x) if row]
+    if x_lag > 0:
+        indices_to_keep2 = [i for i, row in enumerate(est_x) if row]
 
-    # Filter all lists based on these indices
-    est_x = [est_x[i] for i in indices_to_keep]
-    est_xdate = [est_xdate[i] for i in indices_to_keep]
-    est_y = [est_y[i] for i in indices_to_keep]
-    est_ydate = [est_ydate[i] for i in indices_to_keep]
-    est_lag_y = [est_lag_y[i] for i in indices_to_keep]
-    est_lag_ydate = [est_lag_ydate[i] for i in indices_to_keep]
+        # Filter all lists based on these indices
+        est_x = [est_x[i] for i in indices_to_keep2]
+        est_xdate = [est_xdate[i] for i in indices_to_keep2]
+        est_y = [est_y[i] for i in indices_to_keep2]
+        est_ydate = [est_ydate[i] for i in indices_to_keep2]
+        est_lag_y = [est_lag_y[i] for i in indices_to_keep2]
+        est_lag_ydate = [est_lag_ydate[i] for i in indices_to_keep2]
+
+    
 
     # Return the processed data and other information as a dictionary
     return {
