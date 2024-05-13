@@ -46,6 +46,11 @@ midasmlpy_lib = Extension(name='sparsegllog_compiled',
                           extra_f90_compile_args=f_compile_args,
                           library_dirs=library_dirs)
 
+midasmlpy_lib = Extension(name='sglfitF',
+                          sources=['midasmlpy/src/sparseglf90/sglfitF.f90'],
+                          extra_f90_compile_args=f_compile_args,
+                          library_dirs=library_dirs)
+
 if __name__ == "__main__":
     setup(name="midasmlpy",
           version=_VERSION,

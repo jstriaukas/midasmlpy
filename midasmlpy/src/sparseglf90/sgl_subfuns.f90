@@ -250,5 +250,3 @@ MODULE sgl_subfuns
    END SUBROUTINE sp_strong_kkt_check
 
 END MODULE sgl_subfuns
-
-

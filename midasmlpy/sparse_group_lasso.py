@@ -1,8 +1,8 @@
 import numpy as np
 import sparsegllog_compiled # the sparse group lasso module from fortran
 from scipy.sparse.linalg import svds
-from sklearn.metrics import accuracy_score, roc_auc_score
-from sklearn.model_selection import StratifiedKFold
+from sklearn.metrics import accuracy_score, roc_auc_score, mean_squared_error, r2_score
+from sklearn.model_selection import StratifiedKFold, KFold
 import random
 random.seed(111)
 
@@ -38,7 +38,7 @@ def calc_gamma(x, ix, iy, bn):
     return gamma / x.shape[0]
 
 
-def sgLasso_estimation(x, y, group_size, alsparse, pmax = 100, intr = True, nlam=None, ulam=None):
+def sgLasso_estimation(x, y, group_size, alsparse, family, pmax = 100, intr = True, nlam=None, ulam=None):
     """
     Implements the Sparse Group Lasso algorithm, which is a regularization technique combining 
     both lasso (L1) and group lasso (L2) penalties. This method is particularly useful for 
@@ -52,6 +52,7 @@ def sgLasso_estimation(x, y, group_size, alsparse, pmax = 100, intr = True, nlam
         group_size (int): The number of features in each group. It is assumed that all groups have the same number of features.
         alsparse (float): The alpha parameter that balances the L1 and L2 penalties. An alsparse close to 1.0 gives more weight to the 
                           L1 part (similar to Lasso), while an alsparse close to 0.0 gives more weight to the L2 part (similar to Group Lasso).
+        family (str): The type of model to fit. Possible values are 'binomial' for logistic regression and 'gaussian' for linear regression.
         nlam (int, optional): The number of lambda values to use for fitting the model. Default is 100.
         ulam (numpy.ndarray, optional): A sequence of lambda values to use for fitting the model. Default is np.ones(nlam).
         pmax (int, optional): The maximum number of non-zero coefficients allowed in the model. Default is 100.
@@ -83,24 +84,37 @@ def sgLasso_estimation(x, y, group_size, alsparse, pmax = 100, intr = True, nlam
     bn = x.shape[1]//group_size # Number of groups as an integer
     bs = np.full(bn, group_size, dtype=int) # Elements in groups
     ix, iy =  np.array(range(0, nvars, group_size)), np.array(range(group_size-1, nvars, group_size)) # Placement og first column of each group in x
-    gam = 0.25 * calc_gamma(x, ix, iy, bn) # Calculate gamma values for each group of features (columns) 
     pf, pfl1 = np.sqrt(bs),np.ones(nvars) # Penalty factors for L2 and L1 penalties
     dfmax = bn + 1 # Maximum number of groups
     flmin = 0.01 if nobs < nvars else 1e-04
     lb,ub = np.full(bn, -np.inf),np.full(bn, np.inf) # Lower and upper bounds for the coefficients
     
-    _nalam, b0, beta, _activeGroup, _nbeta, alam, npass, jerr = sparsegllog_compiled.log_sparse_four(x = x,
-                    y = y, bn = bn, bs = bs, 
-                    ix = ix + 1, iy = iy + 1, # iy and ix are +1 as fortran is index 1 while python is index 0
-                    gam = gam, nobs = nobs, 
-                    nvars = nvars, pf = pf, pfl1 = pfl1, dfmax = dfmax, pmax = pmax, 
-                    nlam = nlam, flmin = flmin, ulam = ulam, eps = eps, maxit = maxit, 
-                    intr = intr, lb = lb, ub = ub, alsparse = alsparse)
+    if family == 'binomial':
+        gam = 0.25 * calc_gamma(x, ix, iy, bn) # Calculate gamma values for each group of features (columns) 
+        _nalam, b0, beta, _activeGroup, _nbeta, alam, npass, jerr = sparsegllog_compiled.log_sparse_four(x = x,
+                        y = y, bn = bn, bs = bs, 
+                        ix = ix + 1, iy = iy + 1, # iy and ix are +1 as fortran is index 1 while python is index 0
+                        gam = gam, nobs = nobs, 
+                        nvars = nvars, pf = pf, pfl1 = pfl1, dfmax = dfmax, pmax = pmax, 
+                        nlam = nlam, flmin = flmin, ulam = ulam, eps = eps, maxit = maxit, 
+                        intr = intr, lb = lb, ub = ub, alsparse = alsparse)
+        mse = None # to make it easier to return the same number of variables for all families
+    if family == 'gaussian':
+        if intr:
+            y = y-y.mean()
+        gam = calc_gamma(x, ix, iy, bn) # Calculate gamma values for each group of features (columns) 
+        _nalam, b0, beta, _activeGroup, _nbeta, alam, npass, jerr, mse = sparsegllog_compiled.sparse_four(x = x,
+                        y = y, bn = bn, bs = bs, 
+                        ix = ix + 1, iy = iy + 1, # iy and ix are +1 as fortran is index 1 while python is index 0
+                        gam = gam, nobs = nobs, 
+                        nvars = nvars, pf = pf, pfl1 = pfl1, dfmax = dfmax, pmax = pmax, 
+                        nlam = nlam, flmin = flmin, ulam = ulam, eps = eps, maxit = maxit, 
+                        intr = intr, lb = lb, ub = ub, alsparse = alsparse)
     if jerr != 0:
         raise ValueError("Error in the sparse group lasso estimation.")
     if npass == maxit:
         raise ValueError("Failed to converge in the sparse group lasso estimation.")
-    return b0, beta, alam, npass, jerr
+    return b0, beta, alam, npass, jerr, mse
 
 ########################################################################################
 
@@ -140,7 +154,7 @@ def evaluate_binomials(x, y, b0, beta,eval = 'auc', threshold=0.5):
     - accuracies (list): If `eval` == 'accuracy', a list of accuracy scores for each model.
     - auc_scores (list): If `eval` == 'auc', a list of AUC scores for each model.
     """
-    evaluation_score = [0] * len(beta)  # this will store evaluation score
+    evaluation_score = [0] * len(b0)  # this will store evaluation score
     for l in range(len(b0)):
         predictions = predict_binomial(x,b0[l],beta[:,l], threshold=threshold)
         if eval == 'accuracy':
@@ -151,8 +165,51 @@ def evaluate_binomials(x, y, b0, beta,eval = 'auc', threshold=0.5):
             raise ValueError("Invalid evaluation metric. Use 'accuracy' or 'auc'.")
     return evaluation_score
 
+def predict_gaussian(x,b0,beta):
+    """
+    Predict gaussian outcomes using linear regression coefficients.
 
-def best_lambda_find(x,y,group_size, alsparse, nlam = 100, pmax = 100, intr = True,k_folds = 5):
+    Parameters:
+    - x (ndarray): A 2D numpy array where each row represents a sample and each column represents a feature.
+    - b0 (float): The intercept (bias) of the logistic regression model.
+    - beta (ndarray): A 1D numpy array of coefficients for the logistic regression model corresponding to the features in `x`.
+
+    Returns:
+    - predictions (ndarray): A 1D numpy array of outcomes. Each element corresponds to a sample in `x`.
+    """
+    predictions = np.dot(x, beta) + b0
+    return predictions
+
+def evaluate_gaussian(x, y, b0, beta, intr, eval='mse'):
+    """
+    Evaluate the performance of several linear regression models using specified metrics.
+
+    Parameters:
+    - x (ndarray): A 2D numpy array of input features (identical to `x` in `predict`).
+    - y (ndarray): A 1D numpy array containing the true continuous outcomes for each sample in `x`.
+    - b0 (ndarray): A 1D numpy array of intercepts, one for each model being evaluated.
+    - beta (ndarray): A 2D numpy array where each column corresponds to the coefficients of a model.
+    - eval (str): The metric for evaluation; options are 'mse' for Mean Squared Error or 'r2' for R-squared.
+
+    Returns:
+    - evaluation_scores (list): A list of scores, either MSE or R-squared, for each model.
+    """
+    evaluation_scores = [0] * len(b0)  # this will store evaluation scores
+    for l in range(len(b0)):
+        
+        predictions = predict_gaussian(x,b0[l],beta[:,l])
+        if intr:  # Adjust predictions if intercept was used during fitting
+            predictions += y.mean()
+        if eval == 'mse':
+            evaluation_scores[l] = mean_squared_error(y, predictions)
+        elif eval == 'r2':
+            evaluation_scores[l] = r2_score(y, predictions)
+        else:
+            raise ValueError("Invalid evaluation metric. Use 'mse' or 'r2'.")
+    return evaluation_scores
+
+
+def best_lambda_find(x,y,group_size, alsparse, family, nlam = 100, pmax = 100, intr = True,k_folds = 5):
     """
     Find the best model using sparse group lasso. The sparse group lasso finds coefficients for nlam values of lambda, and the best model
     is chosen as the one with the highest mean performance in k-fold cross-validation.
@@ -175,11 +232,14 @@ def best_lambda_find(x,y,group_size, alsparse, nlam = 100, pmax = 100, intr = Tr
         - 'best_lambda' (float): The lambda value of the best model.
     """
     # Find model nlam number of models
-    b0, beta, alam, _npass, _jerr = sgLasso_estimation(x, y, group_size, alsparse, pmax, intr)
+    b0, beta, alam, _npass, _jerr, mse = sgLasso_estimation(x, y, group_size, alsparse,family, pmax, intr)
 
     # Find mean performance for each lambda
     # Split the data into k_folds
-    kf = StratifiedKFold(n_splits=k_folds, shuffle=True, random_state=42)
+    if family == 'binomial':
+        kf = StratifiedKFold(n_splits=k_folds, shuffle=True, random_state=42)
+    if family == 'gaussian':   
+        kf = KFold(n_splits=k_folds, shuffle=True, random_state=42)
 
     # initialize performance list
     performance = []
@@ -188,18 +248,24 @@ def best_lambda_find(x,y,group_size, alsparse, nlam = 100, pmax = 100, intr = Tr
         x_train, x_test = x[train_index], x[test_index]
         y_train, y_test = y[train_index], y[test_index]
         # Estimate the model on the training data
-        b0test, betatest, _alam, _npass, _jerr = sgLasso_estimation(x_train, y_train, group_size, alsparse, pmax = pmax, intr = intr, ulam = alam)
-        performance.append(evaluate_binomials(x_test, y_test, b0test, betatest,eval = 'auc', threshold=0.5))
+        b0test, betatest, _alam, _npass, _jerr, msetrain = sgLasso_estimation(x_train, y_train, group_size, alsparse, family, pmax = pmax, intr = intr, ulam = alam)
+        if family == 'gaussian':
+            performance.append(evaluate_gaussian(x_test, y_test, b0test, betatest,intr,eval = 'mse'))
+        if family == 'binomial':
+            performance.append(evaluate_binomials(x_test, y_test, b0test, betatest,eval = 'auc', threshold=0.5))
 
     performance = np.array(performance)
     mean_performance = np.mean(performance, axis=0)
-    best_lambda = np.argmax(mean_performance)
+    if family == 'gaussian':
+        best_lambda = np.argmin(mean_performance)
+    if family == 'binomial':
+        best_lambda = np.argmax(mean_performance)
     return {'b0': b0[best_lambda], 
             'beta': beta[:,best_lambda], 
-            'maximized_performance': mean_performance[best_lambda], 
+            'best_performance': mean_performance[best_lambda], 
             'best_lambda': alam[best_lambda]}
     
-def best_model(x, y, group_size, nlam = 100, pmax = 100, intr = True, k_folds = 5, disp_flag = True, alpha_values = None, alpha = None):
+def best_model(x, y, group_size, family, nlam = 100, pmax = 100, intr = True, k_folds = 5, disp_flag = True, alpha_values = None, alpha = None):
     """
     Function to find the best model based on the maximized performance of the model. The function uses the bestlambda function to find the best lambda value for the model.
 
@@ -239,23 +305,39 @@ def best_model(x, y, group_size, nlam = 100, pmax = 100, intr = True, k_folds = 
     # Dictionary to store the average maximized performances for each alsparse
     if disp_flag:
         performance_dict = {}
-    best_performance = 0
+    best_performance = None
     best_alsparse = None
     b0, beta = None, None  # Initialize parameters that will store best model coefficients
 
     # Cross-validation process
     for alsparse in alsparse_values:
-        model_result = best_lambda_find(x,y,group_size, alsparse, nlam = nlam, pmax = pmax, intr = intr,k_folds = k_folds)
+        model_result = best_lambda_find(x,y,group_size, alsparse, family, nlam = nlam, pmax = pmax, intr = intr,k_folds = k_folds)
         # Append the maximized performance of this fold
         if disp_flag:
-            performance_dict[alsparse] = model_result['maximized_performance'].round(5)
+            performance_dict[alsparse] = model_result['best_performance'].round(5)
         # If this fold has a higher maximized performance than the previous best, update the best performance
-        if model_result['maximized_performance']>best_performance:
-            best_performance = model_result['maximized_performance']
-            best_alsparse = alsparse
-            b0 = model_result['b0']
-            beta = model_result['beta'] 
-            best_lambda = model_result['best_lambda']
+        if best_performance is None:
+                best_performance = model_result['best_performance']
+                best_alsparse = alsparse
+                b0 = model_result['b0']
+                beta = model_result['beta'] 
+                best_lambda = model_result['best_lambda']
+        else:
+            if family == 'gaussian':
+                if model_result['best_performance']<best_performance:
+                    best_performance = model_result['best_performance']
+                    best_alsparse = alsparse
+                    b0 = model_result['b0']
+                    beta = model_result['beta'] 
+                    best_lambda = model_result['best_lambda']
+            if family == 'binomial':
+                if model_result['best_performance']>best_performance:
+                    best_performance = model_result['best_performance']
+                    best_alsparse = alsparse
+                    b0 = model_result['b0']
+                    beta = model_result['beta'] 
+                    best_lambda = model_result['best_lambda']
+
     if disp_flag:
         print('The performance at different values of alpha are:')
         print(performance_dict)

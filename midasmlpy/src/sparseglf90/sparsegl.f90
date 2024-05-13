@@ -12,25 +12,25 @@ SUBROUTINE sparse_four (bn,bs,ix,iy,gam,nobs,nvars,x,y,pf,pfl1,dfmax,pmax,nlam,&
   INTEGER, PARAMETER :: mnlam = 6
   INTEGER:: isDifZero
   INTEGER:: mnl
-INTEGER, INTENT(IN) :: bn
+  INTEGER, INTENT(IN) :: bn
   INTEGER, INTENT(IN) :: bs(bn)
   INTEGER, INTENT(IN) :: ix(bn)
   INTEGER, INTENT(IN) :: iy(bn)
-  INTEGER, INTENT(IN) :: nobs, nlam, nvars, dfmax, pmax, maxit, intr
+  INTEGER, INTENT(IN) :: nobs, nvars, dfmax, pmax, nlam, maxit, intr
   INTEGER, INTENT(OUT) :: nalam, npass, jerr
   INTEGER, INTENT(OUT) :: activeGroup(pmax)
   INTEGER, INTENT(OUT) :: nbeta(nlam)
-  DOUBLE PRECISION :: flmin, eps, alsparse, max_gam, maxDif, al, alf, snorm, d
+  DOUBLE PRECISION :: flmin, eps, alsparse, max_gam, d, maxDif, al, alf, snorm
   DOUBLE PRECISION, INTENT(in) :: x(nobs,nvars)
   DOUBLE PRECISION, INTENT(in) :: y(nobs)
   DOUBLE PRECISION, INTENT(in) :: pf(bn)
   DOUBLE PRECISION, INTENT(in) :: pfl1(nvars)
-  DOUBLE PRECISION, INTENT(IN) :: ulam(nlam)
-  DOUBLE PRECISION, INTENT(IN) :: gam(bn)
+  DOUBLE PRECISION, INTENT(in) :: ulam(nlam)
+  DOUBLE PRECISION, INTENT(in) :: gam(bn)
   DOUBLE PRECISION, INTENT(in) :: lb(bn), ub(bn)
-  DOUBLE PRECISION, INTENT(OUT) :: beta(nvars,nlam)
-  DOUBLE PRECISION, INTENT(OUT) :: b0(nlam)
-  DOUBLE PRECISION, INTENT(OUT) :: alam(nlam), mse(nlam)
+  DOUBLE PRECISION INTENT(OUT) :: b0(nlam)
+  DOUBLE PRECISION INTENT(OUT) :: beta(nvars,nlam)
+  DOUBLE PRECISION INTENT(OUT) :: alam(nlam), mse(nlam)
 
   DOUBLE PRECISION, DIMENSION (:), ALLOCATABLE :: s !need for sparse_four
   DOUBLE PRECISION, DIMENSION (:), ALLOCATABLE :: b
@@ -130,7 +130,7 @@ INTEGER, INTENT(IN) :: bn
         ENDIF
         ! --inner loop-------------------------------------
         DO
-           ! print *, "This is where we enter the inner loop"
+           print *, "This is where we enter the inner loop"
            npass = npass + 1
            maxDif = 0.0D0
            isDifZero = 0 !Boolean to check if b-oldb nonzero. Unnec, in fn.
@@ -370,6 +370,7 @@ SUBROUTINE spmat_four (bn,bs,ix,iy,gam,nobs,nvars,x,xidx,xcptr,nnz,y,pf,pfl1,&
               IF (is_in_E_set(g) == 0) CYCLE
               startix = ix(g)
               endix = iy(g)
+              PRINT *, "BEFORE UPDATE STEP"
               CALL sp_update_step(bs(g), startix, endix, b, lama, t_for_s(g),&
                    pf(g), pfl1(startix:endix), lam1ma, x, xidx, xcptr, nnz, isDifZero, nobs,&
                    r, gam(g), maxDif, nvars, lb(g), ub(g))
