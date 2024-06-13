@@ -4,6 +4,7 @@ Python implementation of the midasml approach - providing **estimation** and **p
 ## Authors
 * Jonas Striaukas - [jstriaukas](https://github.com/jstriaukas)
 * Kris Stern - [krisstern](https://github.com/krisstern)
+* Marcus Egelund-Müller - [Mem03](https://github.com/Mem03)
 
 ## About
 
@@ -16,11 +17,10 @@ High-dimensional mixed frequency time-series data can also be easily manipulated
 
 ## The `.f90` source files
 
-These can be found at the [midasmlpy/src](./midasmlpy/src) directory.
+These can be found at the [midasmlpy/src](./midasmlpy/src/sparseglf90/) directory.
 Compiled `.so` files can be found at [midasmlpy/compiled](./midasmlpy/compiled) directory.
 Please note that we have taken the `.f90` source code for sparse-group LASSO from the repo of the R package `sparsegl` on hosted GitHub at https://github.com/dajmcdon/sparsegl.
 We have taken their source code in accordance with their GPL-2.0 license as is without any modification as of November 2nd, 2023 UTC.
-What can be found at [midasmlpy/src/sparsegl](./midasmlpy/src/sparsegl) are copies of their `.f90` code.
 
 ## Compiling the `.f90` source files with `f2py` on a Mac
 
@@ -69,7 +69,7 @@ pytest --pyargs src
 
 ## Remarks
 
-In case you are running the code on a different platform, you can compile the Fortran code <tt>sglfitF.f90</tt> by using <tt>f2py</tt> which is part of <tt>numpy</tt>. 
+In case you are running the code on a different platform, you can compile the Fortran code <tt>sglfitF.f90</tt> by using <tt>f2py</tt> which is part of <tt>numpy</tt>. There is a guide in midasmlpy/src/sparseglf90/README.md
 
 [^1]: Babii, A., Ghysels, E., & Striaukas, J. Machine learning time series regressions with an application to nowcasting, (2022) *Journal of Business & Economic Statistics*, Volume 40, Issue 3, 1094-1106. https://doi.org/10.1080/07350015.2021.1899933. 
 

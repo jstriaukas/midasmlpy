@@ -1,32 +1,22 @@
 import sys
 import os
-
-# `Extension` from setuptools cannot compile Fortran code, so we have to use
-# the one from numpy. To do so, we also need to use the `setup` function
-# from numpy, not from setuptools.
-# Confusingly, we need to explicitly import setuptools *before* importing
-# from numpy, so that numpy can internally detect and use the `setup` function
-# from setuptools.
-# References: https://stackoverflow.com/a/51691203
-#   and https://stackoverflow.com/a/55358607
 import setuptools
-try:
-    from numpy.distutils.core import Extension, setup
-except ImportError:
-    sys.exit("install requires: 'numpy'."
-             " use pip or easy_install."
-             " \n  $ pip install numpy")
+import numpy
+from numpy.distutils.core import Extension
+from numpy.distutils.core import setup
 
+# Importing `Extension` and `setup` from `numpy.distutils.core`
+# try:
+#     from numpy.distutils.core import Extension, setup
+# except ImportError:
+#     sys.exit("install requires: 'numpy'. use pip or easy_install. \n  $ pip install numpy")
 
 _VERSION = "1.0.0"
-
 f_compile_args = ['-ffree-form']
-
 
 def read(fname):
     with open(os.path.join(os.path.dirname(__file__), fname)) as _in:
         return _in.read()
-
 
 def get_lib_dir(dylib):
     import subprocess
@@ -40,9 +30,7 @@ def get_lib_dir(dylib):
         raise Exception("Failed to find {}".format(dylib))
 
     libdir = dirname(realpath(p.communicate()[0].strip().decode('ascii')))
-
     return libdir
-
 
 if sys.platform == 'darwin':
     GFORTRAN_LIB = get_lib_dir('libgfortran.3.dylib')
@@ -53,24 +41,28 @@ if sys.platform == 'darwin':
 else:
     library_dirs = None
 
+midasmlpy_lib = Extension(name='sparsegllog_compiled',
+                          sources=['midasmlpy/src/sparseglf90/spmatmul.f90','midasmlpy/src/sparseglf90/log_sgl_subfuns.f90','midasmlpy/src/sparseglf90/sgl_subfuns.f90','midasmlpy/src/sparseglf90/sparsegl.f90','midasmlpy/src/sparseglf90/sparsegllog.f90'],
+                          extra_f90_compile_args=f_compile_args,
+                          library_dirs=library_dirs)
 
 midasmlpy_lib = Extension(name='sglfitF',
-                       sources=['midasmlpy/src/sglfitF.f90'],
-                       extra_f90_compile_args=f_compile_args,
-                       library_dirs=library_dirs,
-                       )
+                          sources=['midasmlpy/src/sparseglf90/sglfitF.f90'],
+                          extra_f90_compile_args=f_compile_args,
+                          library_dirs=library_dirs)
 
 if __name__ == "__main__":
     setup(name="midasmlpy",
           version=_VERSION,
           description="Python wrapper for midasml",
           long_description=read('README.md'),
-          author="Jonas Striaukas and Kris Stern ",
+          author="Jonas Striaukas and Kris Stern",
           author_email="jonas.striaukas@gmail.com",
           url="https://github.com/jstriaukas/midasmlpy",
           install_requires=[
-              "numpy>=1.18.5"
-          ],
+              "numpy>=1.18.5", 
+              "scipy>=1.5.2",
+              "scikit-learn>=1.4.2" ],
           python_requires=">=3.8.*",
           setup_requires=["setuptools"],
           ext_modules=[midasmlpy_lib],
