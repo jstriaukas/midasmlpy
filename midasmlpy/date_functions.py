@@ -464,7 +464,7 @@ def legendre_matrix_create(x_lags, legendre_degree = 3, a=0, b=1):
             psi[x,n] = np.sqrt((2 * n + 1) / (b-a)) * legendre_matrix[x,n]
     return psi
 
-def data_transform(Y, Y_date, X, X_date, x_lags, y_lags, horizon, legendre_degree=3, standardize = True):
+def data_transform(Y, Y_date, X, X_date, x_lags, y_lags, horizon,weight_matrix = None, legendre_degree=3, standardize = True):
     """
     This function takes the Y and X data and creates the X_tilde matrix by multiplying the X matrix with the legendre matrix.
     
@@ -490,7 +490,12 @@ def data_transform(Y, Y_date, X, X_date, x_lags, y_lags, horizon, legendre_degre
     X = X.astype(np.float32)
     # initialize empty X_tilde
     X_tilde = []
-    legendre = legendre_matrix_create(x_lags, legendre_degree)
+    if weight_matrix is None:
+        weight_matrix = legendre_matrix_create(x_lags, legendre_degree)
+    else:
+        # Check if the length of the provided Legendre matrix is equal to x_lags
+        if weight_matrix.shape[0] != x_lags:
+            raise ValueError("The length of the provided Legendre matrix must be equal to x_lags")
     # Standardize inputs if needed
     if standardize:
         X = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
@@ -499,7 +504,7 @@ def data_transform(Y, Y_date, X, X_date, x_lags, y_lags, horizon, legendre_degre
         result = mixed_freq_data(Y, Y_date, X[:,i], X_date, x_lags, y_lags, horizon)
         X_matrix = np.array(result['est_x'], dtype=float)
         # Add the dot-product of X_matrix and the legendre matrix to the X_tilde matrix
-        X_tilde.append(np.dot(X_matrix, legendre))
+        X_tilde.append(np.dot(X_matrix, weight_matrix))
     # Create arrays
     X_tilde = np.array(X_tilde)
     Y = np.array(result['est_y'])
