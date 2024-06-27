@@ -495,7 +495,7 @@ def data_transform(Y, Y_date, X, X_date, x_lags, y_lags, horizon,weight_matrix =
     else:
         # Check if the length of the provided Legendre matrix is equal to x_lags
         if weight_matrix.shape[0] != x_lags:
-            raise ValueError("The length of the provided Legendre matrix must be equal to x_lags")
+            raise ValueError("The length of the provided matrix must be equal to x_lags")
     # Standardize inputs if needed
     if standardize:
         X = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
