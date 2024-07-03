@@ -1,0 +1,358 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module sparsegllog_module ! in 
+    interface  ! in :sparsegllog_module
+        module spmatmul ! in :sparsegllog_module:spmatmul.f90
+            subroutine ymspax(a,ridx,cptr,n,p,nnz,x,y,cj,ck,lx) ! in :sparsegllog_module:spmatmul.f90:spmatmul
+                double precision dimension(nnz),intent(in) :: a
+                integer dimension(nnz),intent(in),depend(nnz) :: ridx
+                integer dimension(1 + p),intent(in) :: cptr
+                integer, optional,check(shape(y, 0) == n),depend(y) :: n=shape(y, 0)
+                integer, optional,check(shape(cptr, 0) == 1 + p),depend(cptr) :: p=-1 + shape(cptr, 0)
+                integer, optional,check(shape(a, 0) == nnz),depend(a) :: nnz=shape(a, 0)
+                double precision dimension(lx),intent(in) :: x
+                double precision dimension(n),intent(inout) :: y
+                integer :: cj
+                integer :: ck
+                integer, optional,check(shape(x, 0) == lx),depend(x) :: lx=shape(x, 0)
+            end subroutine ymspax
+            subroutine ypbspax(a,b,ridx,cptr,n,p,nnz,x,y,cj,ck,lx) ! in :sparsegllog_module:spmatmul.f90:spmatmul
+                double precision dimension(nnz),intent(in) :: a
+                double precision dimension(n),intent(in) :: b
+                integer dimension(nnz),intent(in),depend(nnz) :: ridx
+                integer dimension(1 + p),intent(in) :: cptr
+                integer, optional,check(shape(b, 0) == n),depend(b) :: n=shape(b, 0)
+                integer, optional,check(shape(cptr, 0) == 1 + p),depend(cptr) :: p=-1 + shape(cptr, 0)
+                integer, optional,check(shape(a, 0) == nnz),depend(a) :: nnz=shape(a, 0)
+                double precision dimension(lx),intent(in) :: x
+                double precision dimension(n),intent(inout),depend(n) :: y
+                integer :: cj
+                integer :: ck
+                integer, optional,check(shape(x, 0) == lx),depend(x) :: lx=shape(x, 0)
+            end subroutine ypbspax
+            subroutine spatx(a,ridx,cptr,n,p,nnz,x,y,cj,ck) ! in :sparsegllog_module:spmatmul.f90:spmatmul
+                double precision dimension(nnz),intent(in) :: a
+                integer dimension(nnz),intent(in),depend(nnz) :: ridx
+                integer dimension(1 + p),intent(in) :: cptr
+                integer, optional,check(shape(x, 0) == n),depend(x) :: n=shape(x, 0)
+                integer, optional,check(shape(cptr, 0) == 1 + p),depend(cptr) :: p=-1 + shape(cptr, 0)
+                integer, optional,check(shape(a, 0) == nnz),depend(a) :: nnz=shape(a, 0)
+                double precision dimension(n),intent(in) :: x
+                double precision dimension(1 - cj + ck),intent(inout),check(shape(y, 0) == 1 - cj + ck,shape(y, 0) == 1 - cj + ck),depend(ck,cj) :: y
+                integer, required,intent(in) :: cj
+                integer, required,intent(in) :: ck
+            end subroutine spatx
+            subroutine softthresh(vec,thresh,n) ! in :sparsegllog_module:spmatmul.f90:spmatmul
+                double precision dimension(n) :: vec
+                double precision dimension(n),depend(n) :: thresh
+                integer, optional,check(shape(vec, 0) == n),depend(vec) :: n=shape(vec, 0)
+            end subroutine softthresh
+        end module spmatmul
+        module log_sgl_subfuns ! in :sparsegllog_module:log_sgl_subfuns.f90
+            use spmatmul
+            subroutine log_update_step(bsg,startix,endix,b,lama,t_for_sg,pfg,pfl1,lam1ma,x,y,isdifzero,nobs,r,gamg,maxdif,nvars,lb,ub) ! in :sparsegllog_module:log_sgl_subfuns.f90:log_sgl_subfuns
+                integer, optional,intent(in),check(shape(pfl1, 0) == bsg),depend(pfl1) :: bsg=shape(pfl1, 0)
+                integer intent(in) :: startix
+                integer intent(in) :: endix
+                double precision dimension(1 + nvars),intent(inout) :: b
+                double precision intent(in) :: lama
+                double precision intent(in) :: t_for_sg
+                double precision intent(in) :: pfg
+                double precision dimension(bsg),intent(in) :: pfl1
+                double precision intent(in) :: lam1ma
+                double precision dimension(:),intent(in) :: x
+                double precision dimension(nobs),intent(in) :: y
+                integer intent(inout) :: isdifzero
+                integer, optional,intent(in),check(shape(y, 0) == nobs),depend(y) :: nobs=shape(y, 0)
+                double precision dimension(:),intent(inout) :: r
+                double precision :: gamg
+                double precision intent(inout) :: maxdif
+                integer, optional,intent(in),check(shape(b, 0) == 1 + nvars),depend(b) :: nvars=-1 + shape(b, 0)
+                double precision intent(in) :: lb
+                double precision intent(in) :: ub
+            end subroutine log_update_step
+            subroutine log_sp_update_step(bsg,startix,endix,b,lama,t_for_sg,pfg,pfl1,lam1ma,x,y,xidx,xcptr,nnz,isdifzero,nobs,r,gamg,maxdif,nvars,lb,ub) ! in :sparsegllog_module:log_sgl_subfuns.f90:log_sgl_subfuns
+                integer, optional,intent(in),check(shape(pfl1, 0) == bsg),depend(pfl1) :: bsg=shape(pfl1, 0)
+                integer intent(in) :: startix
+                integer intent(in) :: endix
+                double precision dimension(1 + nvars),intent(inout) :: b
+                double precision intent(in) :: lama
+                double precision intent(in) :: t_for_sg
+                double precision intent(in) :: pfg
+                double precision dimension(bsg),intent(in) :: pfl1
+                double precision intent(in) :: lam1ma
+                double precision dimension(nnz),intent(in) :: x
+                double precision dimension(nobs),intent(in) :: y
+                integer dimension(nnz),intent(in),depend(nnz) :: xidx
+                integer dimension(1 + nvars),intent(in),depend(nvars) :: xcptr
+                integer, optional,intent(in),check(shape(x, 0) == nnz),depend(x) :: nnz=shape(x, 0)
+                integer intent(inout) :: isdifzero
+                integer, optional,intent(in),check(shape(y, 0) == nobs),depend(y) :: nobs=shape(y, 0)
+                double precision dimension(:),intent(inout) :: r
+                double precision :: gamg
+                double precision intent(inout) :: maxdif
+                integer, optional,intent(in),check(shape(b, 0) == 1 + nvars),depend(b) :: nvars=-1 + shape(b, 0)
+                double precision intent(in) :: lb
+                double precision intent(in) :: ub
+            end subroutine log_sp_update_step
+        end module log_sgl_subfuns
+        module sgl_subfuns ! in :sparsegllog_module:sgl_subfuns.f90
+            use spmatmul
+            subroutine strong_rule(is_in_e_set,ga,pf,tlam,alsparse) ! in :sparsegllog_module:sgl_subfuns.f90:sgl_subfuns
+                integer dimension(:),intent(inout) :: is_in_e_set
+                double precision dimension(:),intent(in) :: ga
+                double precision dimension(:),intent(in) :: pf
+                double precision intent(in) :: tlam
+                double precision intent(in) :: alsparse
+            end subroutine strong_rule
+            subroutine kkt_check(is_in_e_set,violation,bn,ix,iy,vl,pf,pfl1,lam1ma,bs,lama,ga,nvars) ! in :sparsegllog_module:sgl_subfuns.f90:sgl_subfuns
+                integer dimension(:),intent(inout) :: is_in_e_set
+                integer intent(inout) :: violation
+                integer, optional,intent(in),check(shape(ix, 0) == bn),depend(ix) :: bn=shape(ix, 0)
+                integer dimension(bn),intent(in) :: ix
+                integer dimension(bn),intent(in),depend(bn) :: iy
+                double precision dimension(:),intent(in) :: vl
+                double precision dimension(bn),intent(in),depend(bn) :: pf
+                double precision dimension(nvars),intent(in) :: pfl1
+                double precision intent(in) :: lam1ma
+                integer dimension(bn),intent(in),depend(bn) :: bs
+                double precision intent(in) :: lama
+                double precision dimension(:),intent(inout) :: ga
+                integer, optional,check(shape(pfl1, 0) == nvars),depend(pfl1) :: nvars=shape(pfl1, 0)
+            end subroutine kkt_check
+            subroutine update_step(bsg,startix,endix,b,lama,t_for_sg,pfg,pfl1,lam1ma,x,isdifzero,nobs,r,gamg,maxdif,nvars,lb,ub) ! in :sparsegllog_module:sgl_subfuns.f90:sgl_subfuns
+                integer, optional,intent(in),check(shape(pfl1, 0) == bsg),depend(pfl1) :: bsg=shape(pfl1, 0)
+                integer intent(in) :: startix
+                integer intent(in) :: endix
+                double precision dimension(1 + nvars),intent(inout) :: b
+                double precision intent(in) :: lama
+                double precision intent(in) :: t_for_sg
+                double precision intent(in) :: pfg
+                double precision dimension(bsg),intent(in) :: pfl1
+                double precision intent(in) :: lam1ma
+                double precision dimension(:),intent(in) :: x
+                integer intent(inout) :: isdifzero
+                integer intent(in) :: nobs
+                double precision dimension(:),intent(inout) :: r
+                double precision :: gamg
+                double precision intent(inout) :: maxdif
+                integer, optional,intent(in),check(shape(b, 0) == 1 + nvars),depend(b) :: nvars=-1 + shape(b, 0)
+                double precision intent(in) :: lb
+                double precision intent(in) :: ub
+            end subroutine update_step
+            subroutine strong_kkt_check(is_in_e_set,violation,bn,ix,iy,pf,pfl1,lam1ma,bs,lama,ga,is_in_s_set,x,r,nobs,nvars,vl) ! in :sparsegllog_module:sgl_subfuns.f90:sgl_subfuns
+                integer dimension(:),intent(inout) :: is_in_e_set
+                integer intent(inout) :: violation
+                integer, optional,intent(in),check(shape(ix, 0) == bn),depend(ix) :: bn=shape(ix, 0)
+                integer dimension(bn),intent(in) :: ix
+                integer dimension(bn),intent(in),depend(bn) :: iy
+                double precision dimension(bn),intent(in),depend(bn) :: pf
+                double precision dimension(nvars),intent(in) :: pfl1
+                double precision intent(in) :: lam1ma
+                integer dimension(bn),intent(in),depend(bn) :: bs
+                double precision intent(in) :: lama
+                double precision dimension(:),intent(inout) :: ga
+                integer dimension(:),intent(in) :: is_in_s_set
+                double precision dimension(nobs,nvars),intent(in),depend(nvars) :: x
+                double precision dimension(nobs),intent(in),depend(nobs) :: r
+                integer, optional,intent(in),check(shape(x, 0) == nobs),depend(x) :: nobs=shape(x, 0)
+                integer, optional,intent(in),check(shape(pfl1, 0) == nvars),depend(pfl1) :: nvars=shape(pfl1, 0)
+                double precision dimension(:),intent(inout) :: vl
+            end subroutine strong_kkt_check
+            subroutine sp_update_step(bsg,startix,endix,b,lama,t_for_sg,pfg,pfl1,lam1ma,x,xidx,xcptr,nnz,isdifzero,nobs,r,gamg,maxdif,nvars,lb,ub) ! in :sparsegllog_module:sgl_subfuns.f90:sgl_subfuns
+                integer, optional,intent(in),check(shape(pfl1, 0) == bsg),depend(pfl1) :: bsg=shape(pfl1, 0)
+                integer intent(in) :: startix
+                integer intent(in) :: endix
+                double precision dimension(1 + nvars),intent(inout) :: b
+                double precision intent(in) :: lama
+                double precision intent(in) :: t_for_sg
+                double precision intent(in) :: pfg
+                double precision dimension(bsg),intent(in) :: pfl1
+                double precision intent(in) :: lam1ma
+                double precision dimension(nnz),intent(in) :: x
+                integer dimension(nnz),intent(in),depend(nnz) :: xidx
+                integer dimension(1 + nvars),intent(in),depend(nvars) :: xcptr
+                integer, optional,intent(in),check(shape(x, 0) == nnz),depend(x) :: nnz=shape(x, 0)
+                integer intent(inout) :: isdifzero
+                integer intent(in) :: nobs
+                double precision dimension(:),intent(inout) :: r
+                double precision :: gamg
+                double precision intent(inout) :: maxdif
+                integer, optional,intent(in),check(shape(b, 0) == 1 + nvars),depend(b) :: nvars=-1 + shape(b, 0)
+                double precision intent(in) :: lb
+                double precision intent(in) :: ub
+            end subroutine sp_update_step
+            subroutine sp_strong_kkt_check(is_in_e_set,violation,bn,ix,iy,pf,pfl1,lam1ma,bs,lama,ga,is_in_s_set,x,xidx,xcptr,nnz,r,nobs,nvars,vl) ! in :sparsegllog_module:sgl_subfuns.f90:sgl_subfuns
+                integer dimension(:),intent(inout) :: is_in_e_set
+                integer intent(inout) :: violation
+                integer, optional,intent(in),check(shape(ix, 0) == bn),depend(ix) :: bn=shape(ix, 0)
+                integer dimension(bn),intent(in) :: ix
+                integer dimension(bn),intent(in),depend(bn) :: iy
+                double precision dimension(bn),intent(in),depend(bn) :: pf
+                double precision dimension(nvars),intent(in) :: pfl1
+                double precision intent(in) :: lam1ma
+                integer dimension(bn),intent(in),depend(bn) :: bs
+                double precision intent(in) :: lama
+                double precision dimension(:),intent(inout) :: ga
+                integer dimension(:),intent(in) :: is_in_s_set
+                double precision dimension(nnz),intent(in) :: x
+                integer dimension(nnz),intent(in),depend(nnz) :: xidx
+                integer dimension(1 + nvars),intent(in),depend(nvars) :: xcptr
+                integer, optional,intent(in),check(shape(x, 0) == nnz),depend(x) :: nnz=shape(x, 0)
+                double precision dimension(nobs),intent(in) :: r
+                integer, optional,intent(in),check(shape(r, 0) == nobs),depend(r) :: nobs=shape(r, 0)
+                integer, optional,intent(in),check(shape(pfl1, 0) == nvars),depend(pfl1) :: nvars=shape(pfl1, 0)
+                double precision dimension(:),intent(inout) :: vl
+            end subroutine sp_strong_kkt_check
+        end module sgl_subfuns
+        subroutine sparse_four(bn,bs,ix,iy,gam,nobs,nvars,x,y,pf,pfl1,dfmax,pmax,nlam,flmin,ulam,eps,maxit,intr,nalam,b0,beta,activegroup,nbeta,alam,npass,jerr,mse,alsparse,lb,ub) ! in :sparsegllog_module:sparsegl.f90
+            use sgl_subfuns
+            integer, optional,intent(in),check(shape(bs, 0) == bn),depend(bs) :: bn=shape(bs, 0)
+            integer dimension(bn),intent(in) :: bs
+            integer dimension(bn),intent(in),depend(bn) :: ix
+            integer dimension(bn),intent(in),depend(bn) :: iy
+            double precision dimension(bn),intent(in),depend(bn) :: gam
+            integer, optional,intent(in),check(shape(x, 0) == nobs),depend(x) :: nobs=shape(x, 0)
+            integer, optional,intent(in),check(shape(x, 1) == nvars),depend(x) :: nvars=shape(x, 1)
+            double precision dimension(nobs,nvars),intent(in) :: x
+            double precision dimension(nobs),intent(in),depend(nobs) :: y
+            double precision dimension(bn),intent(in),depend(bn) :: pf
+            double precision dimension(nvars),intent(in),depend(nvars) :: pfl1
+            integer intent(in) :: dfmax
+            integer intent(in) :: pmax
+            integer, optional,intent(in),check(shape(ulam, 0) == nlam),depend(ulam) :: nlam=shape(ulam, 0)
+            double precision :: flmin
+            double precision dimension(nlam),intent(in) :: ulam
+            double precision :: eps
+            integer intent(in) :: maxit
+            integer intent(in) :: intr
+            integer intent(out) :: nalam
+            double precision dimension(nlam),intent(out),depend(nlam) :: b0
+            double precision dimension(nvars,nlam),intent(out),depend(nlam,nvars) :: beta
+            integer dimension(pmax),intent(out),depend(pmax) :: activegroup
+            integer dimension(nlam),intent(out),depend(nlam) :: nbeta
+            double precision dimension(nlam),intent(out),depend(nlam) :: alam
+            integer intent(out) :: npass
+            integer intent(out) :: jerr
+            double precision dimension(nlam),intent(out),depend(nlam) :: mse
+            double precision :: alsparse
+            double precision dimension(bn),intent(in),depend(bn) :: lb
+            double precision dimension(bn),intent(in),depend(bn) :: ub
+        end subroutine sparse_four
+        subroutine spmat_four(bn,bs,ix,iy,gam,nobs,nvars,x,xidx,xcptr,nnz,y,pf,pfl1,dfmax,pmax,nlam,flmin,ulam,eps,maxit,intr,nalam,b0,beta,activegroup,nbeta,alam,npass,jerr,mse,alsparse,lb,ub) ! in :sparsegllog_module:sparsegl.f90
+            use sgl_subfuns
+            use spmatmul
+            integer, optional,check(shape(bs, 0) == bn),depend(bs) :: bn=shape(bs, 0)
+            integer dimension(bn) :: bs
+            integer dimension(bn),depend(bn) :: ix
+            integer dimension(bn),depend(bn) :: iy
+            double precision dimension(bn),depend(bn) :: gam
+            integer, optional,check(shape(y, 0) == nobs),depend(y) :: nobs=shape(y, 0)
+            integer, optional,check(shape(xcptr, 0) == 1 + nvars),depend(xcptr) :: nvars=-1 + shape(xcptr, 0)
+            double precision dimension(nnz),intent(in) :: x
+            integer dimension(nnz),intent(in),depend(nnz) :: xidx
+            integer dimension(1 + nvars),intent(in) :: xcptr
+            integer, optional,check(shape(x, 0) == nnz),depend(x) :: nnz=shape(x, 0)
+            double precision dimension(nobs),intent(in) :: y
+            double precision dimension(bn),intent(in),depend(bn) :: pf
+            double precision dimension(nvars),intent(in),depend(nvars) :: pfl1
+            integer :: dfmax
+            integer, optional,check(shape(activegroup, 0) == pmax),depend(activegroup) :: pmax=shape(activegroup, 0)
+            integer, optional,check(shape(ulam, 0) == nlam),depend(ulam) :: nlam=shape(ulam, 0)
+            double precision :: flmin
+            double precision dimension(nlam) :: ulam
+            double precision :: eps
+            integer :: maxit
+            integer :: intr
+            integer :: nalam
+            double precision dimension(nlam),depend(nlam) :: b0
+            double precision dimension(nvars,nlam),depend(nlam,nvars) :: beta
+            integer dimension(pmax) :: activegroup
+            integer dimension(nlam),depend(nlam) :: nbeta
+            double precision dimension(nlam),depend(nlam) :: alam
+            integer :: npass
+            integer :: jerr
+            double precision dimension(nlam),depend(nlam) :: mse
+            double precision :: alsparse
+            double precision dimension(bn),intent(in),depend(bn) :: lb
+            double precision dimension(bn),intent(in),depend(bn) :: ub
+        end subroutine spmat_four
+        subroutine log_sparse_four(bn,bs,ix,iy,gam,nobs,nvars,x,y,pf,pfl1,dfmax,pmax,nlam,flmin,ulam,eps,maxit,intr,nalam,b0,beta,activegroup,nbeta,alam,npass,jerr,alsparse,lb,ub) ! in :sparsegllog_module:sparsegllog.f90
+            use log_sgl_subfuns
+            use sgl_subfuns
+            integer, optional,intent(in),check(shape(bs, 0) == bn),depend(bs) :: bn=shape(bs, 0)
+            integer dimension(bn),intent(in) :: bs
+            integer dimension(bn),intent(in),depend(bn) :: ix
+            integer dimension(bn),intent(in),depend(bn) :: iy
+            double precision dimension(bn),intent(in),depend(bn) :: gam
+            integer, optional,intent(in),check(shape(x, 0) == nobs),depend(x) :: nobs=shape(x, 0)
+            integer, optional,intent(in),check(shape(x, 1) == nvars),depend(x) :: nvars=shape(x, 1)
+            double precision dimension(nobs,nvars),intent(in) :: x
+            double precision dimension(nobs),intent(in),depend(nobs) :: y
+            double precision dimension(bn),intent(in),depend(bn) :: pf
+            double precision dimension(nvars),intent(in),depend(nvars) :: pfl1
+            integer intent(in) :: dfmax
+            integer intent(in) :: pmax
+            integer, optional,intent(in),check(shape(ulam, 0) == nlam),depend(ulam) :: nlam=shape(ulam, 0)
+            double precision :: flmin
+            double precision dimension(nlam),intent(in) :: ulam
+            double precision :: eps
+            integer intent(in) :: maxit
+            integer intent(in) :: intr
+            integer intent(out) :: nalam
+            double precision dimension(nlam),intent(out),depend(nlam) :: b0
+            double precision dimension(nvars,nlam),intent(out),depend(nlam,nvars) :: beta
+            integer dimension(pmax),intent(out),depend(pmax) :: activegroup
+            integer dimension(nlam),intent(out),depend(nlam) :: nbeta
+            double precision dimension(nlam),intent(out),depend(nlam) :: alam
+            integer intent(out) :: npass
+            integer intent(out) :: jerr
+            double precision :: alsparse
+            double precision dimension(bn),intent(in),depend(bn) :: lb
+            double precision dimension(bn),intent(in),depend(bn) :: ub
+        end subroutine log_sparse_four
+        subroutine log_spmat_four(bn,bs,ix,iy,gam,nobs,nvars,x,xidx,xcptr,nnz,y,pf,pfl1,dfmax,pmax,nlam,flmin,ulam,eps,maxit,intr,nalam,b0,beta,activegroup,nbeta,alam,npass,jerr,alsparse,lb,ub) ! in :sparsegllog_module:sparsegllog.f90
+            use log_sgl_subfuns
+            use sgl_subfuns
+            use spmatmul
+            integer, optional,check(shape(bs, 0) == bn),depend(bs) :: bn=shape(bs, 0)
+            integer dimension(bn) :: bs
+            integer dimension(bn),depend(bn) :: ix
+            integer dimension(bn),depend(bn) :: iy
+            double precision dimension(bn),depend(bn) :: gam
+            integer, optional,check(shape(y, 0) == nobs),depend(y) :: nobs=shape(y, 0)
+            integer, optional,check(shape(xcptr, 0) == 1 + nvars),depend(xcptr) :: nvars=-1 + shape(xcptr, 0)
+            double precision dimension(nnz),intent(in) :: x
+            integer dimension(nnz),intent(in),depend(nnz) :: xidx
+            integer dimension(1 + nvars),intent(in) :: xcptr
+            integer, optional,check(shape(x, 0) == nnz),depend(x) :: nnz=shape(x, 0)
+            double precision dimension(nobs),intent(in) :: y
+            double precision dimension(bn),intent(in),depend(bn) :: pf
+            double precision dimension(nvars),intent(in),depend(nvars) :: pfl1
+            integer :: dfmax
+            integer, optional,check(shape(activegroup, 0) == pmax),depend(activegroup) :: pmax=shape(activegroup, 0)
+            integer, optional,check(shape(ulam, 0) == nlam),depend(ulam) :: nlam=shape(ulam, 0)
+            double precision :: flmin
+            double precision dimension(nlam) :: ulam
+            double precision :: eps
+            integer :: maxit
+            integer :: intr
+            integer :: nalam
+            double precision dimension(nlam),depend(nlam) :: b0
+            double precision dimension(nvars,nlam),depend(nlam,nvars) :: beta
+            integer dimension(pmax) :: activegroup
+            integer dimension(nlam),depend(nlam) :: nbeta
+            double precision dimension(nlam),depend(nlam) :: alam
+            integer :: npass
+            integer :: jerr
+            double precision :: alsparse
+            double precision dimension(bn),intent(in),depend(bn) :: lb
+            double precision dimension(bn),intent(in),depend(bn) :: ub
+        end subroutine log_spmat_four
+    end interface 
+end python module sparsegllog_module
+
+! This file was auto-generated with f2py (version:2.0.0).
+! See:
+! https://web.archive.org/web/20140822061353/http://cens.ioc.ee/projects/f2py2e

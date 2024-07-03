@@ -1,15 +1,18 @@
 # 3-11 work content
-from datetime import datetime
-from unicodedata import numeric
-from sklearn.preprocessing import StandardScaler
+import statistics
 import numpy as np
+from datetime import datetime
+import calendar
+
 
 # Finds time difference between two given times
-#time input style: [year,month,day,hour,min,sec]
-def diff_time_mf(time1, time2, origin, units = ["auto", "secs", "mins", "hours", "days", "weeks"]):
+# time input style: [year,month,day,hour,min,sec]
+def diff_time_mf(time1, time2, origin, units=None):
+    if units is None:
+        units = ["auto", "secs", "mins", "hours", "days", "weeks"]
     ini_time1 = time1
     ini_time2 = time2
-    if(len(ini_time1) != len(ini_time2)):
+    if len(ini_time1) != len(ini_time2):
         print("time list length doesn't equal!")
         quit()
     result = []
@@ -21,7 +24,7 @@ def diff_time_mf(time1, time2, origin, units = ["auto", "secs", "mins", "hours",
             time2 = datetime.strptime(time2, '%m-%d-%y')
         except:
             time1 = datetime.strptime(time1, '%m/%d/%y')
-            time2 = datetime.strptime(time2, '%m/%d/%y')            
+            time2 = datetime.strptime(time2, '%m/%d/%y')
         delta_time = time1 - time2
         delta_days = delta_time.days
         delta_sec = delta_time.seconds
@@ -39,6 +42,7 @@ def diff_time_mf(time1, time2, origin, units = ["auto", "secs", "mins", "hours",
             result.append(86400 * delta_days + delta_sec)
     return result
 
+
 # Lag a number by a given period and unit
 def lag_num(x_lag, period, unit):
     if type(x_lag) == int or float:
@@ -48,7 +52,7 @@ def lag_num(x_lag, period, unit):
     except:
         print('The description of lags cannot be recognized. The format should be 3m, 1q, etc')
         quit()
-    #Convert multiplier to daily frequency (business days)
+    # Convert multiplier to daily frequency (business days)
     ndaysPerYear = 264
     ndaysPerQuarter = 66
     ndaysPerMonth = 22
@@ -62,7 +66,7 @@ def lag_num(x_lag, period, unit):
     if x_lag[-1] == 'h':
         multiplier = multiplier / nhoursPerDay
     if x_lag[-1] == 's':
-        multiplier = multiplier /  (nhoursPerDay*60*60)
+        multiplier = multiplier / (nhoursPerDay * 60 * 60)
     if unit == 1:
         x_lag = round(multiplier / (ndaysPerYear * period))
     if unit == 2:
@@ -76,6 +80,7 @@ def lag_num(x_lag, period, unit):
     if unit == 6:
         x_lag = round(multiplier / (period / nhoursPerDay / 60 / 60))
     return x_lag
+
 
 # Calculate the mode of a given dataset
 def mode_midasml(data):
@@ -100,9 +105,7 @@ def mode_midasml(data):
         "dataMode": dataMode,
         "countMax": countMax
     }
-    
-import statistics
-import numpy as np
+
 
 # Calculate the frequency of data points in a given date vector
 def data_freq(DateVec):
@@ -110,7 +113,7 @@ def data_freq(DateVec):
     DateVec = np.array(DateVec)
     shape_vec = DateVec.shape
     for i in range(len(DateVec) - 1):
-        DateVec[i]=DateVec[i + 1] - DateVec[i]
+        DateVec[i] = DateVec[i + 1] - DateVec[i]
         total_days = DateVec[i][0] * 360 + DateVec[i][1] * 30 + DateVec[i][2]
         if total_days >= 0:
             if DateVec[i][2] < 0:
@@ -118,16 +121,16 @@ def data_freq(DateVec):
                 DateVec[i][1] -= 1
                 if DateVec[i][1] < 0:
                     DateVec[i][1] += 12
-                    DateVec[i][0] -=1
+                    DateVec[i][0] -= 1
             elif DateVec[i][1] < 0:
                 DateVec[i][1] += 12
-                DateVec[i][0] -=1
-            
+                DateVec[i][0] -= 1
+
     DateVec = np.array(DateVec[:-1])
     y = DateVec.shape
-    x= DateVec[:,0]
+    x = DateVec[:, 0]
     # Check annual or lower frequency
-    modeUse = mode_midasml(DateVec[:,0])
+    modeUse = mode_midasml(DateVec[:, 0])
     modeUse = modeUse["dataMode"]
     if modeUse >= 1:
         period = modeUse
@@ -136,22 +139,22 @@ def data_freq(DateVec):
             "period": period,
             "unit": unit
         }
-        
+
     # Check monthly frequency, quarter = 3 months, semiannual = 6 months
-    modeUse = mode_midasml(DateVec[:,1])
+    modeUse = mode_midasml(DateVec[:, 1])
     modeUse = modeUse["dataMode"]
     if modeUse < 0:
         modeUse = modeUse + 12
     if modeUse >= 1:
         period = modeUse
-        unit =2
+        unit = 2
         return {
             "period": period,
             "unit": unit
         }
-        
+
     # Check daily frequency, week = 7 days, biweekly = 14 days
-    modeUse = mode_midasml(DateVec[:,2])
+    modeUse = mode_midasml(DateVec[:, 2])
     modeUse = modeUse["dataMode"]
     if modeUse < 0:
         modeUse += 30
@@ -162,9 +165,9 @@ def data_freq(DateVec):
             "period": period,
             "unit": unit
         }
-    
+
     # Check hourly frequency
-    modeUse = mode_midasml(DateVec[:,3])
+    modeUse = mode_midasml(DateVec[:, 3])
     modeUse = modeUse["dataMode"]
     if modeUse < 0:
         modeUse += 24
@@ -175,9 +178,9 @@ def data_freq(DateVec):
             "period": period,
             "unit": unit
         }
-        
-  # Check minutely frequency
-    modeUse = mode_midasml(DateVec[:,4])
+
+    # Check minutely frequency
+    modeUse = mode_midasml(DateVec[:, 4])
     modeUse = modeUse["dataMode"]
     if modeUse < 0:
         modeUse += 60
@@ -188,9 +191,9 @@ def data_freq(DateVec):
             "period": period,
             "unit": unit
         }
-  
-  # Check secondly frequency  
-    elapse = diff_time_mf(ini_DV[:,5], ini_DV[:,5], origin = "1970-01-01", units = "secs")
+
+    # Check secondly frequency
+    elapse = diff_time_mf(ini_DV[:, 5], ini_DV[:, 5], origin="1970-01-01", units="secs")
     period = statistics.mean(elapse)
     unit = 6
     return {
@@ -198,7 +201,8 @@ def data_freq(DateVec):
         "unit": unit
     }
 
-# Check if two dates match   
+
+# Check if two dates match
 def dateMatch(x, y):
     n = len(x)
     x_out = n * [0]
@@ -222,7 +226,6 @@ def dateMatch(x, y):
                 x_out[i] = i_x
     return x_out
 
-from datetime import datetime
 
 # Check if a given date is in the correct format
 # ISO Date Format: 2021-07-07 06:36:55
@@ -242,20 +245,14 @@ def corr_datetype(date):
             date[i] = year + "-" + month + "-" + day + " " + x[1]
     return date
 
+
 # Calculate the beginning of a month for a given date
 def monthBegin(x):
     x = corr_datetype(x)
     df = datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
-    df = df.replace(day = 1, hour = 0, minute = 0, second = 0)
+    df = df.replace(day=1, hour=0, minute=0, second=0)
     return df
 
-import calendar
-from datetime import datetime
-from unicodedata import numeric
-import statistics
-import numpy as np
-from datetime import datetime
-import calendar
 
 # Calculate the end of a month for a given date
 def monthEnd(x):
@@ -265,8 +262,9 @@ def monthEnd(x):
     month = df.month + 1
     last = calendar.monthrange(year, month)
     last_day = last[1]
-    df = df.replace(day = last_day, hour = 0, minute = 0, second = 0)
+    df = df.replace(day=last_day, hour=0, minute=0, second=0)
     return df
+
 
 # Check if a given dataset contains any missing values
 def is_na(data):
@@ -274,15 +272,17 @@ def is_na(data):
     for i, y in enumerate(data):
         if y is not None:
             data_temp.append(y)
-        else: continue
+        else:
+            continue
     return data_temp
 
-# Convert a string into a date vector    
+
+# Convert a string into a date vector
 def date_vec(s):
     w = 6
     h = len(s)
     mat = [[0 for x in range(w)] for y in range(h)]
-    for i in range(h): 
+    for i in range(h):
         mat[i][0] = s[i].year
         mat[i][1] = s[i].month
         mat[i][2] = s[i].day
@@ -290,6 +290,7 @@ def date_vec(s):
         mat[i][4] = s[i].minute
         mat[i][5] = s[i].second
     return mat
+
 
 # Handle mixed frequency data
 
@@ -367,8 +368,8 @@ def mixed_freq_data(data_y, data_ydate, data_x, data_xdate, x_lag, y_lag, horizo
     est_xdate = [[None for x in range(x_lag)] for y in range(nobs)]
     for t in range(nobs):
         # Create lagged values of y
-        est_lag_y[t][:] = data_y[t - 1 : t - y_lag -1: -1]
-        est_lag_ydate[t][:] = data_ydate_num[t - 1  : t - y_lag -1: -1]
+        est_lag_y[t][:] = data_y[t - 1: t - y_lag - 1: -1]
+        est_lag_ydate[t][:] = data_ydate_num[t - 1: t - y_lag - 1: -1]
 
         # Create lagged values of x
         for i in range(len(data_xdate_num)):
@@ -377,10 +378,10 @@ def mixed_freq_data(data_y, data_ydate, data_x, data_xdate, x_lag, y_lag, horizo
                 break
         if loc == None:
             loc = len(data_xdate_num)
-        
+
         else:
-            est_x[t][:] = data_x[loc - horizon  : loc -horizon - x_lag : -1]
-            est_xdate[t][:] = data_xdate_num[loc - horizon  : loc -horizon - x_lag : -1]
+            est_x[t][:] = data_x[loc - horizon: loc - horizon - x_lag: -1]
+            est_xdate[t][:] = data_xdate_num[loc - horizon: loc - horizon - x_lag: -1]
     # All values of y dont always have values for y_lag, so the values returning an empty list of x are removed in the lists
     if y_lag > 0:
         indices_to_keep1 = [i for i, row in enumerate(est_lag_y) if row]
@@ -405,8 +406,6 @@ def mixed_freq_data(data_y, data_ydate, data_x, data_xdate, x_lag, y_lag, horizo
         est_lag_y = [est_lag_y[i] for i in indices_to_keep2]
         est_lag_ydate = [est_lag_ydate[i] for i in indices_to_keep2]
 
-    
-
     # Return the processed data and other information as a dictionary
     return {
         "est_y": est_y,
@@ -430,7 +429,7 @@ def legendre_polynomial(x, d):
     Returns:
         float: The value of the Legendre polynomial at x for degree d.
     """
- 
+
     if d == 0:
         return 1
     elif d == 1:
@@ -438,8 +437,9 @@ def legendre_polynomial(x, d):
     else:
         return ((2 * d - 1) * x * legendre_polynomial(x, d - 1) - (d - 1) * legendre_polynomial(x, d - 2)) / d
 
+
 # Create matrix of legendre polynomials for lags and degrees
-def legendre_matrix_create(x_lags, legendre_degree = 3, a=0, b=1):
+def legendre_matrix_create(x_lags, legendre_degree=3, a=0, b=1):
     """
     This function creates a matrix of Legendre polynomials for the input x_lags and legendre_degree.
 
@@ -453,18 +453,20 @@ def legendre_matrix_create(x_lags, legendre_degree = 3, a=0, b=1):
     # Create list of equally spaced values between a and b for use in legendre polynomials
     x_values = np.linspace(a, b, num=x_lags)
     # Shift the x values to be between -1 and 1
-    x_values = 2 * x_values / (b-a) - ((b+a) / (b-a))
+    x_values = 2 * x_values / (b - a) - ((b + a) / (b - a))
     # Create matrix to store legendre polynomials
     legendre_matrix = np.zeros((x_lags, legendre_degree))
     psi = np.zeros((x_lags, legendre_degree))
     # Calculate the Legendre polynomials for each x value and degree
     for x in range(len(x_values)):
         for n in range(legendre_degree):
-            legendre_matrix[x,n] = legendre_polynomial(x_values[x], n)
-            psi[x,n] = np.sqrt((2 * n + 1) / (b-a)) * legendre_matrix[x,n]
+            legendre_matrix[x, n] = legendre_polynomial(x_values[x], n)
+            psi[x, n] = np.sqrt((2 * n + 1) / (b - a)) * legendre_matrix[x, n]
     return psi
 
-def data_transform(Y, Y_date, X, X_date, x_lags, y_lags, horizon,weight_matrix = None, legendre_degree=3, standardize = True):
+
+def data_transform(Y, Y_date, X, X_date, x_lags, y_lags, horizon, weight_matrix=None, legendre_degree=3,
+                   standardize=True):
     """
     This function takes the Y and X data and creates the X_tilde matrix by multiplying the X matrix with the legendre matrix.
     
@@ -501,7 +503,7 @@ def data_transform(Y, Y_date, X, X_date, x_lags, y_lags, horizon,weight_matrix =
         X = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
     for i in range(X.shape[1]):
         # First get the correct data structure
-        result = mixed_freq_data(Y, Y_date, X[:,i], X_date, x_lags, y_lags, horizon)
+        result = mixed_freq_data(Y, Y_date, X[:, i], X_date, x_lags, y_lags, horizon)
         X_matrix = np.array(result['est_x'], dtype=float)
         # Add the dot-product of X_matrix and the legendre matrix to the X_tilde matrix
         X_tilde.append(np.dot(X_matrix, weight_matrix))
@@ -516,36 +518,3 @@ def data_transform(Y, Y_date, X, X_date, x_lags, y_lags, horizon,weight_matrix =
         "X_tilde": X_tilde,
         "Y_lagged": Y_lagged
     }
-
-#if __name__ == "__main__":
-#    with open("data_files/input_data_refdate.txt") as file_data_refdate:
-#        data_refdate = [line.rstrip() for line in file_data_refdate]
-#    with open("data_files/input_data_x.txt") as file_data_x:
-#        data_x = [line.rstrip() for line in file_data_x]
-#    with open("data_files/input_data_xdate.txt") as file_data_xdate:
-#        data_xdate = [line.rstrip() for line in file_data_xdate]
-#    x_lag = 12
-#    horizon = 1
-#    est_start = ["1990-01-01"]
-#    est_end = ["2002-03-01"]
-#    result = mixed_freq_data_single(data_refdate, data_x, data_xdate, x_lag, horizon, est_start, #est_end, disp_flag = True)
-#    print(result)
-
-#if __name__ == "__main__":
-#    with open("input_data_x.txt") as file_data_x:
-#        data_x = [line.rstrip() for line in file_data_x]
-#    with open("input_data_xdate.txt") as file_data_xdate:
-#        data_xdate = [line.rstrip() for line in file_data_xdate]
-#    with open("input_data_y.txt") as file_data_x:
-#        data_y = [line.rstrip() for line in file_data_x]
-#    with open("input_data_ydate.txt") as file_data_xdate:
-#        data_ydate = [line.rstrip() for line in file_data_xdate]
-#    x_lag = 12
-#    y_lag = 1
-#    horizon = 1
-#    est_start = ["1990-01-01"]
-#    est_end = ["2002-03-01"]
-#    result = mixed_freq_data(data_y, data_ydate, data_x, data_xdate, x_lag, y_lag, horizon, #est_start, est_end, disp_flag = True)
-    
- #   print(result)
-

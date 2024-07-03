@@ -95,7 +95,7 @@ MODULE sgl_subfuns
       ENDIF
       ALLOCATE(dd(bsg))
       dd = b(startix:endix) - oldb
-      IF (ANY(dd .ne. 0.0D0)) THEN
+      IF (ANY(dd /= 0.0D0)) THEN
          maxDif = MAX(maxDif, gamg**2 * DOT_PRODUCT(dd,dd))
          r = r - MATMUL(x(:,startix:endix), dd)
          isDifZero = 1
@@ -191,7 +191,7 @@ MODULE sgl_subfuns
       ENDIF
       ALLOCATE(dd(bsg))
       dd = b(startix:endix) - oldb
-      IF(ANY(dd .ne. 0.0D0)) THEN
+      IF(ANY(dd /= 0.0D0)) THEN
          maxDif = MAX(maxDif, gamg**2 * DOT_PRODUCT(dd,dd))
          CALL ymspax(x, xidx, xcptr, nobs, nvars, nnz, dd, r, startix, endix, bsg)
          isDifZero = 1

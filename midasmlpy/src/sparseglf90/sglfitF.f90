@@ -9,32 +9,32 @@ SUBROUTINE sglfit(gamma,ngroups,gindex,nobs,nvars,&
   
     IMPLICIT NONE
     ! -------- INPUT VARIABLES -------- !
-    Real*8, intent(in) :: gamma
+    Real(kind=8), intent(in) :: gamma
     Integer, intent(in) :: ngroups
-    Integer*4, intent(in) :: gindex(:)
+    Integer(kind=4), intent(in) :: gindex(:)
 	  
     Integer, intent(in) :: nobs
     Integer, intent(in) :: nvars, dfmax, pmax, nlam
     Integer, intent(in) :: isd, intr, maxit
     Integer, intent(out) :: nalam, npass, jerr
-    Integer*4, intent(out) :: nbeta(nlam), ibeta(pmax)
+    Integer(kind=4), intent(out) :: nbeta(nlam), ibeta(pmax)
 
-    Real*8, intent(in) :: flmin, eps, peps
-    Real*8, intent(in) :: x(:, :), y(:)
-    Real*8, intent(in) :: pf(:)
-    Real*8, intent(out) :: b0(nlam), beta(pmax, nlam)
-    Real*8, intent(out) :: alam(nlam)
-    Real*8, intent(in) :: ulam(:)
-    Real*8  ulam_(nlam)
+    Real(kind=8), intent(in) :: flmin, eps, peps
+    Real(kind=8), intent(in) :: x(:, :), y(:)
+    Real(kind=8), intent(in) :: pf(:)
+    Real(kind=8), intent(out) :: b0(nlam), beta(pmax, nlam)
+    Real(kind=8), intent(out) :: alam(nlam)
+    Real(kind=8), intent(in) :: ulam(:)
+    Real(kind=8)  ulam_(nlam)
 
     INTEGER j, l, nk, ierr
     INTEGER, Dimension(:), Allocatable :: ju
-    Real*8, Dimension(:), Allocatable :: xmean
-    Real*8, Dimension(:), Allocatable :: xnorm
-    Real*8, Dimension(:), Allocatable :: maj
-    Real*8, Dimension(:), Allocatable :: pf_
+    Real(kind=8), Dimension(:), Allocatable :: xmean
+    Real(kind=8), Dimension(:), Allocatable :: xnorm
+    Real(kind=8), Dimension(:), Allocatable :: maj
+    Real(kind=8), Dimension(:), Allocatable :: pf_
 
-    real*8 maxlam,tmp
+    real(kind=8) maxlam,tmp
 
     nalam = 0
     b0 = 0.D0
@@ -70,7 +70,7 @@ SUBROUTINE sglfit(gamma,ngroups,gindex,nobs,nvars,&
 
     Call standard(nobs, nvars, x, ju, isd, intr, xmean, xnorm, maj)
     ! -------------------- COMPUTE LAMBDA --------------------- !
-    If (ulam(1) .EQ. -1.0D0) Then
+    If (ulam(1) == -1.0D0) Then
         Call maxlambda(nvars, nobs, x, y, gamma, gindex, ngroups, pf, maxlam)
         ulam_(1) = maxlam
         Do j = 2, nlam
@@ -116,17 +116,17 @@ SUBROUTINE sglfitpathF(maj, gamma, ngroups, gindex,&
     INTEGER mnl, nobs, nvars, dfmax, pmax, nlam, maxit
     INTEGER nalam, npass, jerr, intr, ngroups
     INTEGER ju(nvars)
-    INTEGER*4 m(pmax), nbeta(nlam), gindex(ngroups)
-    Real*8 eps, gamma, bnorm, peps
-    Real*8 x(nobs, nvars), y(nobs), maj(nvars)
-    Real*8 pf(nvars)
-    Real*8 beta(pmax, nlam), b0(nlam)
-    Real*8 ulam(nlam), alam(nlam)
+    INTEGER(kind=4) m(pmax), nbeta(nlam), gindex(ngroups)
+    Real(kind=8) eps, gamma, bnorm, peps
+    Real(kind=8) x(nobs, nvars), y(nobs), maj(nvars)
+    Real(kind=8) pf(nvars)
+    Real(kind=8) beta(pmax, nlam), b0(nlam)
+    Real(kind=8) ulam(nlam), alam(nlam)
       
     INTEGER, Parameter :: mnlam = 6
-    Real*8 d, dif, oldb, u, al, flmin
-    Real*8, Dimension(:), Allocatable :: b, oldbeta, r
-    Real*8 gw
+    Real(kind=8) d, dif, oldb, u, al, flmin
+    Real(kind=8), Dimension(:), Allocatable :: b, oldbeta, r
+    Real(kind=8) gw
     INTEGER gstart, gend
     INTEGER k, j, l, g, vrg, ctr, ierr, ni, me, pln
     INTEGER gs, gj, skip
@@ -271,16 +271,16 @@ SUBROUTINE sglfitpathF(maj, gamma, ngroups, gindex,&
       INTEGER nalam, npass, jerr, intr
       !INTEGER ju(nvars), m(pmax), nbeta(nlam)
       INTEGER ju(nvars)
-      INTEGER*4 m(pmax), nbeta(nlam)
-      Real*8 eps
-      Real*8 x(nobs, nvars), y(nobs), maj(nvars)
-      Real*8 pf(nvars)
-      Real*8 beta(pmax, nlam), b0(nlam)
-      Real*8 ulam(nlam), alam(nlam)
+      INTEGER(kind=4) m(pmax), nbeta(nlam)
+      Real(kind=8) eps
+      Real(kind=8) x(nobs, nvars), y(nobs), maj(nvars)
+      Real(kind=8) pf(nvars)
+      Real(kind=8) beta(pmax, nlam), b0(nlam)
+      Real(kind=8) ulam(nlam), alam(nlam)
       ! -------- LOCAL DECLARATIONS -------- !
       INTEGER, PARAMETER :: mnlam = 6
-      Real*8 tmp, d, dif, oldb, u, v, al, flmin
-      Real*8, DIMENSION(:), ALLOCATABLE :: b, oldbeta, r
+      Real(kind=8) tmp, d, dif, oldb, u, v, al, flmin
+      Real(kind=8), DIMENSION(:), ALLOCATABLE :: b, oldbeta, r
       
       INTEGER k, j, l, vrg, ctr, ierr, ni, me, pln
       INTEGER, DIMENSION(:), ALLOCATABLE :: mm
@@ -429,13 +429,13 @@ SUBROUTINE sglfitpathF(maj, gamma, ngroups, gindex,&
       IMPLICIT NONE
       ! -------- INPUT VARIABLES -------- !
       INTEGER gstart, gend, nvars, nobs
-      Real*8 x(nobs,nvars), r(nobs), b(nvars), al
-      Real*8 gamma, pf(nvars), peps, gw
+      Real(kind=8) x(nobs,nvars), r(nobs), b(nvars), al
+      Real(kind=8) gamma, pf(nvars), peps, gw
       ! -------- LOCAL DECLARATIONS -------- !
       INTEGER :: g
-      Real*8 u, scl, tmp, maxg, normg, d 
-      Real*8 bold(nvars), vg
-      Real*8, Parameter :: big = 9.9D30
+      Real(kind=8) u, scl, tmp, maxg, normg, d
+      Real(kind=8) bold(nvars), vg
+      Real(kind=8), Parameter :: big = 9.9D30
       ! -------- BEGIN PROGRAM -------- !
       Do
        bold(gstart:gend) = b(gstart:gend)
@@ -452,7 +452,7 @@ SUBROUTINE sglfitpathF(maj, gamma, ngroups, gindex,&
          ! Initialize storage vars
          maxg = 0.0D0
          vg = gw * al * (1.0D0-gamma)/normg
-         If (normg .EQ. 0.0D0) Then
+         If (normg == 0.0D0) Then
            vg = big
          End If
          Do g = gstart, gend
@@ -476,11 +476,11 @@ SUBROUTINE sglfitpathF(maj, gamma, ngroups, gindex,&
       IMPLICIT NONE
       ! -------- INPUT VARIABLES -------- !
       INTEGER nobs, nvars, isd, intr, ju(nvars)
-      Real*8 x(nobs, nvars), xmean(nvars)
-      Real*8 xnorm(nvars), maj(nvars)
+      Real(kind=8) x(nobs, nvars), xmean(nvars)
+      Real(kind=8) xnorm(nvars), maj(nvars)
       ! -------- LOCAL DECLARATIONS -------- !
       INTEGER j
-      Real*8 xmsq, xvar
+      Real(kind=8) xmsq, xvar
       ! -------- BEGIN PROGRAM -------- !
       IF (intr == 0) THEN
       DO j = 1, nvars
@@ -517,10 +517,10 @@ SUBROUTINE sglfitpathF(maj, gamma, ngroups, gindex,&
       IMPLICIT NONE
       ! -------- INPUT VARIABLES -------- !
       INTEGER :: nobs,nvars,ju(nvars)
-      Real*8 :: x(nobs,nvars)
+      Real(kind=8) :: x(nobs,nvars)
       ! -------- LOCAL DECLARATIONS -------- !
       INTEGER :: i,j
-      Real*8 :: t
+      Real(kind=8) :: t
       ! -------- BEGIN PROGRAM -------- ! 
       DO j = 1, nvars
       ju(j) = 0
@@ -533,9 +533,6 @@ SUBROUTINE sglfitpathF(maj, gamma, ngroups, gindex,&
       END DO
       END DO
       END SUBROUTINE chkvars
-
-
-
 
 
     SUBROUTINE maxlambda(nvars, nobs, x, y, gamma, gindex, ngroups, pf, maxlam)
@@ -555,17 +552,17 @@ SUBROUTINE sglfitpathF(maj, gamma, ngroups, gindex,&
         r = y
         nzvars = 0
         DO k = 1, nvars
-            IF (pf(k) .EQ. 0.0D0) THEN
+            IF (pf(k) == 0.0D0) THEN
             nzvars = nzvars + 1
             END IF
         END DO
-        IF (nzvars .NE. 0) THEN
+        IF (nzvars /= 0) THEN
             !CALL rnz(nvars, nobs, nzvars, y, x, r, pf)
         END IF
         xy = MATMUL(TRANSPOSE(x),r)/nobs
 
 
-        IF (gamma .EQ. 1.0D0) THEN
+        IF (gamma == 1.0D0) THEN
             maxlam = MAXVAL(ABS(xy))
         ELSE
             DO k = 1, ngroups
@@ -584,7 +581,7 @@ SUBROUTINE sglfitpathF(maj, gamma, ngroups, gindex,&
                 IF (gw == 0.0D0) THEN
                     wmaxg(k) = 0.0D0
                 ELSE
-                    IF (gamma .EQ. 0.0D0) THEN
+                    IF (gamma == 0.0D0) THEN
                         !rb = NORM2(xy(gstart:gend))
                         rb = SQRT(DOT_PRODUCT(xy(gstart:gend), xy(gstart:gend)))
                         wmaxg(k) = rb/gw
@@ -656,7 +653,7 @@ SUBROUTINE sglfitpathF(maj, gamma, ngroups, gindex,&
                     stopflag = 1
                 END IF
             END IF
-           IF (stopflag .EQ. 1) EXIT
+           IF (stopflag == 1) EXIT
         END DO
         rb = mp
 

@@ -28,9 +28,9 @@ SUBROUTINE sparse_four (bn,bs,ix,iy,gam,nobs,nvars,x,y,pf,pfl1,dfmax,pmax,nlam,&
   DOUBLE PRECISION, INTENT(in) :: ulam(nlam)
   DOUBLE PRECISION, INTENT(in) :: gam(bn)
   DOUBLE PRECISION, INTENT(in) :: lb(bn), ub(bn)
-  DOUBLE PRECISION INTENT(OUT) :: b0(nlam)
-  DOUBLE PRECISION INTENT(OUT) :: beta(nvars,nlam)
-  DOUBLE PRECISION INTENT(OUT) :: alam(nlam), mse(nlam)
+  DOUBLE PRECISION, INTENT(OUT) :: b0(nlam)
+  DOUBLE PRECISION, INTENT(OUT) :: beta(nvars,nlam)
+  DOUBLE PRECISION, INTENT(OUT) :: alam(nlam), mse(nlam)
 
   DOUBLE PRECISION, DIMENSION (:), ALLOCATABLE :: s !need for sparse_four
   DOUBLE PRECISION, DIMENSION (:), ALLOCATABLE :: b
@@ -148,9 +148,9 @@ SUBROUTINE sparse_four (bn,bs,ix,iy,gam,nobs,nvars,x,y,pf,pfl1,dfmax,pmax,nlam,&
                  activeGroup(ni) = g
               ENDIF
            ENDDO
-           IF (intr .ne. 0) THEN
+           IF (intr /= 0) THEN
             d = sum(r) / nobs
-            IF (d .ne. 0.0D0) THEN
+            IF (d /= 0.0D0) THEN
                b(0) = b(0) + d
                r = r - d
                maxDif = max(maxDif, d**2)
@@ -222,7 +222,7 @@ SUBROUTINE sparse_four (bn,bs,ix,iy,gam,nobs,nvars,x,y,pf,pfl1,dfmax,pmax,nlam,&
      me = 0
      DO j = 1, ni
         g = activeGroup(j)
-        IF (ANY(beta(ix(g):iy(g),l) .ne. 0.0D0)) me=me+1
+        IF (ANY(beta(ix(g):iy(g),l) /= 0.0D0)) me=me+1
      ENDDO
      IF (me > dfmax) EXIT
   ENDDO ! end lambda loop
@@ -381,9 +381,9 @@ SUBROUTINE spmat_four (bn,bs,ix,iy,gam,nobs,nvars,x,xidx,xcptr,nnz,y,pf,pfl1,&
                  activeGroup(ni) = g
               ENDIF
            ENDDO
-           IF(intr .ne. 0) THEN
+           IF(intr /= 0) THEN
               d = sum(r) / nobs
-              IF(d .ne. 0.0D0) THEN
+              IF(d /= 0.0D0) THEN
                  b(0) = b(0) + d
                  r = r - d
                  maxDif = max(maxDif, d**2)
@@ -455,7 +455,7 @@ SUBROUTINE spmat_four (bn,bs,ix,iy,gam,nobs,nvars,x,xidx,xcptr,nnz,y,pf,pfl1,&
      me = 0
      DO j = 1, ni
         g = activeGroup(j)
-        IF (ANY(beta(ix(g):iy(g),l) .ne. 0.0D0)) me = me + 1
+        IF (ANY(beta(ix(g):iy(g),l) /= 0.0D0)) me = me + 1
      ENDDO
      IF (me > dfmax) EXIT
   ENDDO ! end lambda loop

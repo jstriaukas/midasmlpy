@@ -74,7 +74,7 @@ SUBROUTINE log_sparse_four (bn,bs,ix,iy,gam,nobs,nvars,x,y,pf,pfl1,dfmax,pmax,&
   alf = 0.0D0
   max_gam = MAXVAL(gam)
   t_for_s = 1 / gam
-  IF (intr .ne. 0) THEN
+  IF (intr /= 0) THEN
      b(0) = 4 * sum(y/2) / nobs
      r = r + y * b(0)
   ENDIF
@@ -230,7 +230,7 @@ SUBROUTINE log_sparse_four (bn,bs,ix,iy,gam,nobs,nvars,x,y,pf,pfl1,dfmax,pmax,&
      me = 0
      DO j = 1, ni
         g = activeGroup(j)
-        IF (ANY(beta(ix(g):iy(g),l) .ne. 0.0D0)) me=me+1
+        IF (ANY(beta(ix(g):iy(g),l) /= 0.0D0)) me=me+1
      ENDDO
      IF (me > dfmax) EXIT
   ENDDO ! end lambda loop
@@ -319,7 +319,7 @@ SUBROUTINE log_spmat_four (bn,bs,ix,iy,gam,nobs,nvars,x,xidx,xcptr,nnz,y,pf,pfl1
   alf = 0.0D0
   max_gam = MAXVAL(gam)
   t_for_s = 1/gam
-  IF (intr .ne. 0) THEN
+  IF (intr /= 0) THEN
      b(0) = 4 * sum(y/2) / nobs
      r = r + y * b(0)
   ENDIF
@@ -475,7 +475,7 @@ SUBROUTINE log_spmat_four (bn,bs,ix,iy,gam,nobs,nvars,x,xidx,xcptr,nnz,y,pf,pfl1
      me = 0
      DO j = 1, ni
         g = activeGroup(j)
-        IF (ANY(beta(ix(g):iy(g),l) .ne. 0.0D0)) me = me + 1
+        IF (ANY(beta(ix(g):iy(g),l) /= 0.0D0)) me = me + 1
      ENDDO
      IF (me > dfmax) EXIT
   ENDDO ! end lambda loop
