@@ -1,31 +1,31 @@
-import sys
+# import sys
 import os
-from distutils.command.build_ext import build_ext
-from distutils.extension import Extension
+# from distutils.command.build_ext import build_ext
+# from distutils.extension import Extension
 from distutils.core import setup
 
 _VERSION = "1.0.0"
 f_compile_args = ['-ffree-form']
 
 
-def read(fname):
-    with open(os.path.join(os.path.dirname(__file__), fname)) as _in:
-        return _in.read()
+# def read(fname):
+#     with open(os.path.join(os.path.dirname(__file__), fname)) as _in:
+#         return _in.read()
 
 
-def get_lib_dir(dylib):
-    import subprocess
-    from os.path import realpath, dirname
+# def get_lib_dir(dylib):
+#     import subprocess
+#     from os.path import realpath, dirname
 
-    p = subprocess.Popen("gfortran -print-file-name={}".format(dylib),
-                         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                         shell=True)
-    retcode = p.wait()
-    if retcode != 0:
-        raise Exception("Failed to find {}".format(dylib))
+#     p = subprocess.Popen("gfortran -print-file-name={}".format(dylib),
+#                          stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+#                          shell=True)
+#     retcode = p.wait()
+#     if retcode != 0:
+#         raise Exception("Failed to find {}".format(dylib))
 
-    libdir = dirname(realpath(p.communicate()[0].strip().decode('ascii')))
-    return libdir
+#     libdir = dirname(realpath(p.communicate()[0].strip().decode('ascii')))
+#     return libdir
 
 
 # if sys.platform == 'darwin':

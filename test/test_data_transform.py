@@ -10,8 +10,8 @@ import unittest
 class Test_TestDataTransformation(unittest.TestCase):
     def setUp(self):
         # Load data and set common variables
-        self.Predictors = pd.read_excel('../user_guide/predictors-monthly.xlsx').to_numpy()
-        self.Target = pd.read_excel('../user_guide/recessions-quarterly.xlsx').to_numpy()
+        self.Predictors = pd.read_excel('user_guide/predictors-monthly.xlsx').to_numpy()
+        self.Target = pd.read_excel('user_guide/recessions-quarterly.xlsx').to_numpy()
         self.Y_date = self.Target[:, 0]
         self.Y = self.Target[:, 1]
         self.X_date = self.Predictors[:, 0]
