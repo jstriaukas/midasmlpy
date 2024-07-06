@@ -3,6 +3,7 @@ from distutils.core import setup
 
 _VERSION = "1.0.0"
 
+
 def read(fname):
     with open(os.path.join(os.path.dirname(__file__), fname)) as _in:
         return _in.read()
@@ -25,7 +26,9 @@ if __name__ == "__main__":
         ],
         python_requires=">=3.10.0",
         setup_requires=["setuptools"],
-        packages=['midasmlpy'],
+        packages=["midasmlpy"],
+        package_dir={"": "."},
+        package_data={"midasmlpy.src.sparseglf90": ["*.so"]},
         classifiers=[
             'Development Status :: 5 - Production/Stable',
             'Environment :: Console',
