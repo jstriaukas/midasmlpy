@@ -1,5 +1,6 @@
 import os
-from distutils.core import setup
+# Always prefers setuptools over distutils
+from setuptools import setup, find_packages
 
 _VERSION = "1.0.0"
 
@@ -26,9 +27,8 @@ if __name__ == "__main__":
         ],
         python_requires=">=3.10.0",
         setup_requires=["setuptools"],
-        packages=["midasmlpy"],
-        package_dir={"": "."},
-        package_data={"midasmlpy.src.sparseglf90": ["*.so"]},
+        packages=find_packages(include=["midasmlpy"]),
+        package_data={"midasmlpy.src.sparseglf90": ["sparsegllog_module.cpython-311-darwin.so"]},
         classifiers=[
             'Development Status :: 5 - Production/Stable',
             'Environment :: Console',

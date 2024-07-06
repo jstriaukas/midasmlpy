@@ -6,7 +6,6 @@ import random
 
 from midasmlpy.src.sparseglf90 import sparsegllog_module
 
-
 random.seed(111)
 
 
