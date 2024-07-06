@@ -7,7 +7,7 @@ import unittest
 
 # load data from xlsx files and create a dataframe
 
-class Test_TestDataTransformation(unittest.TestCase):
+class Test_TestBestModel(unittest.TestCase):
     def setUp(self):
         """Load data and set common variables"""
         Predictors = pd.read_excel('user_guide/predictors-monthly.xlsx').to_numpy()
@@ -24,15 +24,15 @@ class Test_TestDataTransformation(unittest.TestCase):
         self.y = output['Y']
         self.x = output['X_tilde']
 
-    def test_data_transform1(self):
+    def test_best_model1(self):
         """Testing model"""
         # Expected output
-        expected_alparse = 1.0
-        expected_performance = 0.5933333333333334
-        expected_lambda = 0.0023094239221552225
+        expected_alparse = 0.0
+        expected_performance = 0.516667
+        expected_lambda = 0.031104
         expected_b0 = 0.0
-        expected_beta = np.array([0., 0., 0., 0., -0.,
-                                  0., -0., -0.06625337, 0., 0.])
+        expected_beta = np.array([0., 0., 0., 0., -0.004404,
+                                  -0.001062, -0.003664, -0.008484, 0., 0.])
 
         # Call the function
         output = sgl.best_model(x=self.x, y=self.y, group_size=self.degree, nlam=50, pmax=122, intr=False,
