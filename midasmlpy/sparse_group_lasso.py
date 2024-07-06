@@ -318,7 +318,7 @@ def best_lambda_find(x, y, group_size, alsparse, family='binomial', nlam=100, pm
             'best_lambda': alam[best_lambda]}
 
 
-def best_model(x, y, group_size, family=None, nlam=100, pmax=100, intr=True, k_folds=5, disp_flag=True, alpha_values=None,
+def best_model(x, y, group_size, family='binomial', nlam=100, pmax=100, intr=True, k_folds=5, disp_flag=True, alpha_values=None,
                alpha=None):
     """
     Function to find the best model based on the maximized performance of the model. The function uses the bestlambda function to find the best lambda value for the model.
@@ -349,6 +349,11 @@ def best_model(x, y, group_size, family=None, nlam=100, pmax=100, intr=True, k_f
     dict
         A dictionary containing the best alpha value, the best performance, the intercept and the coefficients of the model
     """
+
+    best_performance = None
+    best_alsparse = None
+    b0, beta = None, None  # Initialize parameters that will store best model coefficients
+
     if alpha is not None:
         alsparse_values = np.array(alpha)
     elif alpha_values is not None:
@@ -359,9 +364,6 @@ def best_model(x, y, group_size, family=None, nlam=100, pmax=100, intr=True, k_f
     # Dictionary to store the average maximized performances for each alsparse
     if disp_flag:
         performance_dict = {}
-    best_performance = None
-    best_alsparse = None
-    b0, beta = None, None  # Initialize parameters that will store best model coefficients
 
     # Cross-validation process
     for alsparse in alsparse_values:
@@ -370,6 +372,7 @@ def best_model(x, y, group_size, family=None, nlam=100, pmax=100, intr=True, k_f
         # Append the maximized performance of this fold
         if disp_flag:
             performance_dict[alsparse] = model_result['best_performance'].round(5)
+
         # If this fold has a higher maximized performance than the previous best, update the best performance
         if best_performance is None:
             best_performance = model_result['best_performance']

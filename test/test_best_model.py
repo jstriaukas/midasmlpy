@@ -41,9 +41,9 @@ class Test_TestDataTransformation(unittest.TestCase):
         # Assertions to verify the output matches expected output
         np.testing.assert_array_almost_equal(output['best_alsparse'], expected_alparse)
         np.testing.assert_array_almost_equal(output['best_performance'], expected_performance)
-        # np.testing.assert_array_almost_equal(output['best_lambda'], expected_lambda)
-        # np.testing.assert_array_almost_equal(output['b0'], expected_b0)
-        # np.testing.assert_array_almost_equal(output['beta'][0:10], expected_beta)
+        np.testing.assert_array_almost_equal(output['best_lambda'], expected_lambda)
+        np.testing.assert_array_almost_equal(output['b0'], expected_b0)
+        np.testing.assert_array_almost_equal(output['beta'][0:10], expected_beta)
 
 
 if __name__ == '__main__':
