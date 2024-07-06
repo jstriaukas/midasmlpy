@@ -90,7 +90,7 @@ To run the tests, please click on the run icon next to the tests in the Test Exp
 <img title="Test Explorer sample image" alt="Test Explorer sample image" src="./media/test-explorer-sample-image.png" width="300px;">
 
 > [!NOTE]  
-> The run icon only shows up if you hover your cursor over the relevant tests in the Test Explorer. 
+> The run icon only shows up if you hover your cursor over the relevant test(s) in the Test Explorer. 
 
 ## Remarks
 
