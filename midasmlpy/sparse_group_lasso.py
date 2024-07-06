@@ -198,9 +198,11 @@ def evaluate_binomials(x, y, b0, beta, eval='auc', threshold=0.5):
     - accuracies (list): If `eval` == 'accuracy', a list of accuracy scores for each model.
     - auc_scores (list): If `eval` == 'auc', a list of AUC scores for each model.
     """
+
     evaluation_score = [0] * len(b0)  # this will store evaluation score
     for l in range(len(b0)):
         predictions = predict_binomial(x, b0[l], beta[:, l], threshold=threshold)
+
         if eval == 'accuracy':
             evaluation_score[l] = accuracy_score(y, predictions)
         elif eval == 'auc':
@@ -298,12 +300,12 @@ def best_lambda_find(x, y, group_size, alsparse, family='binomial', nlam=100, pm
         x_train, x_test = x[train_index], x[test_index]
         y_train, y_test = y[train_index], y[test_index]
         # Estimate the model on the training data
-        b0test, betatest, _alam, _npass, _jerr, msetrain = sgLASSO_estimation(x_train, y_train, group_size, alsparse,
+        b0test, beta_test, _alam, _npass, _jerr, mse_train = sgLASSO_estimation(x_train, y_train, group_size, alsparse,
                                                                               family, pmax=pmax, intr=intr, ulam=alam)
         if family == 'gaussian':
-            performance.append(evaluate_gaussian(x_test, y_test, b0test, betatest, intr, eval='mse'))
+            performance.append(evaluate_gaussian(x_test, y_test, b0test, beta_test, intr, eval='mse'))
         if family == 'binomial':
-            performance.append(evaluate_binomials(x_test, y_test, b0test, betatest, eval='auc', threshold=0.5))
+            performance.append(evaluate_binomials(x_test, y_test, b0test, beta_test, eval='auc', threshold=0.5))
 
     performance = np.array(performance)
     mean_performance = np.mean(performance, axis=0)
@@ -311,8 +313,8 @@ def best_lambda_find(x, y, group_size, alsparse, family='binomial', nlam=100, pm
         best_lambda = np.argmin(mean_performance)
     if family == 'binomial':
         best_lambda = np.argmax(mean_performance)
-    return {'b0': b0,
-            'beta': beta[:, best_lambda],
+    return {'b0': b0, # b0[best_lambda],
+            'beta': beta, # beta[:, best_lambda],
             'best_performance': mean_performance[best_lambda],
             'best_lambda': alam[best_lambda]}
 
