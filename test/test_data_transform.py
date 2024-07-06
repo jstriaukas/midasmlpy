@@ -28,7 +28,7 @@ class Test_TestDataTransformation(unittest.TestCase):
 
         # Call the function
         output = datef.data_transform(self.Y, self.Y_date, self.X, self.X_date, x_lags=3, y_lags=0, horizon=0,
-                                      legendre_degree=3, standardize=True)
+                                      degree=3, standardize=True)
 
         # Assertions to verify the output matches expected output
         np.testing.assert_array_equal(output['Y'][0:10], expected_Y)
@@ -47,7 +47,7 @@ class Test_TestDataTransformation(unittest.TestCase):
 
         # Call the function
         output = datef.data_transform(self.Y, self.Y_date, self.X, self.X_date, x_lags=3, y_lags=1, horizon=0,
-                                      legendre_degree=4, standardize=True)
+                                      degree=4, standardize=True)
 
         # Assertions to verify the output matches expected output
         np.testing.assert_array_equal(output['Y'][0:10], expected_Y)
@@ -65,7 +65,7 @@ class Test_TestDataTransformation(unittest.TestCase):
 
         # Call the function
         output = datef.data_transform(self.Y, self.Y_date, self.X, self.X_date, x_lags=3, y_lags=0, horizon=2,
-                                      legendre_degree=4, standardize=True)
+                                      degree=4, standardize=True)
 
         # Assertions to verify the output matches expected output
         np.testing.assert_array_equal(output['Y'][0:10], expected_Y)

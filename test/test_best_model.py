@@ -16,9 +16,9 @@ class Test_TestDataTransformation(unittest.TestCase):
         Y = Target[:, 1]
         X_date = Predictors[:, 0]
         X = Predictors[:, 1:]
-        self.legendre_degree = 4
+        self.degree = 4
         output = datef.data_transform(Y, Y_date, X, X_date, x_lags=3, y_lags=0, horizon=0,
-                                      legendre_degree=self.legendre_degree, standardize=True)
+                                      degree=self.degree, standardize=True)
 
         # Assertions to verify the output matches expected output
         self.y = output['Y']
@@ -35,7 +35,7 @@ class Test_TestDataTransformation(unittest.TestCase):
                                   0., -0., -0.06625337, 0., 0.])
 
         # Call the function
-        output = sgl.best_model(x=self.x, y=self.y, group_size=self.legendre_degree, nlam=50, pmax=122, intr=False,
+        output = sgl.best_model(x=self.x, y=self.y, group_size=self.degree, nlam=50, pmax=122, intr=False,
                                 k_folds=2, disp_flag=False, alpha_values=3, alpha=None)
 
         # Assertions to verify the output matches expected output
