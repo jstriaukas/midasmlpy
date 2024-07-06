@@ -42,7 +42,7 @@ def calc_gamma(x, ix, iy, bn):
     return gamma / x.shape[0]
 
 
-def sgLasso_estimation(x, y, group_size, alsparse, family, pmax=100, intr=True, nlam=None, ulam=None):
+def sgLasso_estimation(x, y, group_size, alsparse, family='binomial', pmax=100, intr=True, nlam=None, ulam=None):
     """
     Implements the Sparse Group Lasso algorithm, which is a regularization technique combining 
     both lasso (L1) and group lasso (L2) penalties. This method is particularly useful for 
