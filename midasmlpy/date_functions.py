@@ -439,13 +439,13 @@ def legendre_polynomial(x, d):
 
 
 # Create matrix of legendre polynomials for lags and degrees
-def legendre_matrix_create(x_lags, legendre_degree=3, a=0, b=1):
+def legendre_matrix_create(x_lags, degree=3, a=0, b=1):
     """
-    This function creates a matrix of Legendre polynomials for the input x_lags and legendre_degree.
+    This function creates a matrix of Legendre polynomials for the input x_lags and degree.
 
     Args:
         x_lags (int): The number of lags.
-        legendre_degree (int): The degree of the Legendre polynomial. Default is 3.
+        degree (int): The degree of the Legendre polynomial. Default is 3.
     
     Returns:
         numpy.ndarray: A matrix of Legendre polynomials for the given lags and degrees.
@@ -455,17 +455,17 @@ def legendre_matrix_create(x_lags, legendre_degree=3, a=0, b=1):
     # Shift the x values to be between -1 and 1
     x_values = 2 * x_values / (b - a) - ((b + a) / (b - a))
     # Create matrix to store legendre polynomials
-    legendre_matrix = np.zeros((x_lags, legendre_degree))
-    psi = np.zeros((x_lags, legendre_degree))
+    legendre_matrix = np.zeros((x_lags, degree))
+    psi = np.zeros((x_lags, degree))
     # Calculate the Legendre polynomials for each x value and degree
     for x in range(len(x_values)):
-        for n in range(legendre_degree):
+        for n in range(degree):
             legendre_matrix[x, n] = legendre_polynomial(x_values[x], n)
             psi[x, n] = np.sqrt((2 * n + 1) / (b - a)) * legendre_matrix[x, n]
     return psi
 
 
-def data_transform(Y, Y_date, X, X_date, x_lags, y_lags, horizon, weight_matrix=None, legendre_degree=3,
+def data_transform(Y, Y_date, X, X_date, x_lags, y_lags, horizon, weight_matrix=None, degree=3,
                    standardize=True):
     """
     This function takes the Y and X data and creates the X_tilde matrix by multiplying the X matrix with the legendre matrix.
@@ -478,7 +478,8 @@ def data_transform(Y, Y_date, X, X_date, x_lags, y_lags, horizon, weight_matrix=
     - x_lags (int): The number of lags to be created for the predictors
     - y_lags (int): The number of lags to be created for the target variable
     - horizon (int): The number of periods to forecast ahead
-    - legendre (int): The degree of the legendre polynomial
+    - weight_matrix (ndarray): The matrix of MIDAS polynomials (default is None which means Legendre polynomials are used)
+    - degree (int): The degree of Legendre polynomials (used only if weight_matrix is None)
     - standardize (bool): Whether to standardize the predictors or not
 
     Returns:
@@ -493,7 +494,7 @@ def data_transform(Y, Y_date, X, X_date, x_lags, y_lags, horizon, weight_matrix=
     # initialize empty X_tilde
     X_tilde = []
     if weight_matrix is None:
-        weight_matrix = legendre_matrix_create(x_lags, legendre_degree)
+        weight_matrix = legendre_matrix_create(x_lags, degree)
     else:
         # Check if the length of the provided Legendre matrix is equal to x_lags
         if weight_matrix.shape[0] != x_lags:

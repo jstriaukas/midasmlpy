@@ -11,7 +11,7 @@ random.seed(111)
 
 ########################################################################################
 
-########### Functions related to fitting the sparse group lasso model.##################
+########### Functions related to fitting the sparse group LASSO model.##################
 
 ########################################################################################
 
@@ -41,10 +41,10 @@ def calc_gamma(x, ix, iy, bn):
     return gamma / x.shape[0]
 
 
-def sgLasso_estimation(x, y, group_size, alsparse, family='binomial', pmax=100, intr=True, nlam=None, ulam=None):
+def sgLASSO_estimation(x, y, group_size, alsparse, family='binomial', pmax=100, intr=True, nlam=None, ulam=None):
     """
-    Implements the Sparse Group Lasso algorithm, which is a regularization technique combining 
-    both lasso (L1) and group lasso (L2) penalties. This method is particularly useful for 
+    Implements the sparse group LASSO algorithm, which is a regularization technique combining 
+    both LASSO (L1) and group LASSO (L2) penalties. This method is particularly useful for 
     scenarios where both individual feature sparsity and group sparsity are desired. The 
     algorithm assumes that features are divided into groups of equal size.
 
@@ -54,7 +54,7 @@ def sgLasso_estimation(x, y, group_size, alsparse, family='binomial', pmax=100, 
         y (numpy.ndarray): A vector of length n_obs that contains the dependent variable (response variable).
         group_size (int): The number of features in each group. It is assumed that all groups have the same number of features.
         alsparse (float): The alpha parameter that balances the L1 and L2 penalties. An alsparse close to 1.0 gives more weight to the 
-                          L1 part (similar to Lasso), while an alsparse close to 0.0 gives more weight to the L2 part (similar to Group Lasso).
+                          L1 part (similar to LASSO), while an alsparse close to 0.0 gives more weight to the L2 part (similar to Group LASSO).
         family (str): The type of model to fit. Possible values are 'binomial' for logistic regression and 'gaussian' for linear regression.
         nlam (int, optional): The number of lambda values to use for fitting the model. Default is 100.
         ulam (numpy.ndarray, optional): A sequence of lambda values to use for fitting the model. Default is np.ones(nlam).
@@ -150,15 +150,15 @@ def sgLasso_estimation(x, y, group_size, alsparse, family='binomial', pmax=100, 
                                                                                                      lb=lb, ub=ub,
                                                                                                      alsparse=alsparse)
     if jerr != 0:
-        raise ValueError("Error in the sparse group lasso estimation.")
+        raise ValueError("Error in the sparse group LASSO estimation.")
     if npass == maxit:
-        raise ValueError("Failed to converge in the sparse group lasso estimation.")
+        raise ValueError("Failed to converge in the sparse group LASSO estimation.")
     return b0, beta, alam, npass, jerr, mse
 
 
 ########################################################################################
 
-######### Functions related to finding the optimal sparse group lasso model. ###########
+######### Functions related to finding the optimal sparse group LASSO model. ###########
 
 ########################################################################################
 
@@ -257,7 +257,7 @@ def evaluate_gaussian(x, y, b0, beta, intr, eval='mse'):
 
 def best_lambda_find(x, y, group_size, alsparse, family='binomial', nlam=100, pmax=100, intr=True, k_folds=5):
     """
-    Find the best model using sparse group lasso. The sparse group lasso finds coefficients for nlam values of lambda, and the best model
+    Find the best model using sparse group LASSO. The sparse group LASSO finds coefficients for nlam values of lambda, and the best model
     is chosen as the one with the highest mean performance in k-fold cross-validation.
 
     Parameters:
@@ -278,7 +278,7 @@ def best_lambda_find(x, y, group_size, alsparse, family='binomial', nlam=100, pm
         - 'best_lambda' (float): The lambda value of the best model.
     """
     # Find model nlam number of models
-    b0, beta, alam, _npass, _jerr, mse = sgLasso_estimation(x, y, group_size, alsparse, family, pmax, intr)
+    b0, beta, alam, _npass, _jerr, mse = sgLASSO_estimation(x, y, group_size, alsparse, family, pmax, intr)
 
     kf = StratifiedKFold(n_splits=k_folds, shuffle=True, random_state=42)
 
@@ -298,7 +298,7 @@ def best_lambda_find(x, y, group_size, alsparse, family='binomial', nlam=100, pm
         x_train, x_test = x[train_index], x[test_index]
         y_train, y_test = y[train_index], y[test_index]
         # Estimate the model on the training data
-        b0test, betatest, _alam, _npass, _jerr, msetrain = sgLasso_estimation(x_train, y_train, group_size, alsparse,
+        b0test, betatest, _alam, _npass, _jerr, msetrain = sgLASSO_estimation(x_train, y_train, group_size, alsparse,
                                                                               family, pmax=pmax, intr=intr, ulam=alam)
         if family == 'gaussian':
             performance.append(evaluate_gaussian(x_test, y_test, b0test, betatest, intr, eval='mse'))
