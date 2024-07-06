@@ -280,14 +280,14 @@ def best_lambda_find(x, y, group_size, alsparse, family='binomial', nlam=100, pm
     # Find model nlam number of models
     b0, beta, alam, _npass, _jerr, mse = sgLASSO_estimation(x, y, group_size, alsparse, family, pmax, intr)
 
-    kf = StratifiedKFold(n_splits=k_folds, shuffle=True, random_state=42)
+    kf = StratifiedKFold(n_splits=k_folds, shuffle=False, random_state=42)
 
     # Find mean performance for each lambda
     # Split the data into k_folds
     if family == 'binomial':
-        kf = StratifiedKFold(n_splits=k_folds, shuffle=True, random_state=42)
+        kf = StratifiedKFold(n_splits=k_folds, shuffle=False, random_state=42)
     if family == 'gaussian':
-        kf = KFold(n_splits=k_folds, shuffle=True, random_state=42)
+        kf = KFold(n_splits=k_folds, shuffle=False, random_state=42)
 
     best_lambda = None
 
