@@ -55,17 +55,42 @@ pip install .
 
 ## Development
 
-To install the midasmlpy package for development, do the following instead in “editable” mode:
-```shell
-pip install -e .
-```
+We recommend using the VS Code IDE for local development. After cloning this repo, before you install the `midasmlpy` package, you should run the following commands in the Terminal one-by-one:
+
+1. Go to the source file directory
+    ```shell
+    cd midasmlpy/src/sparseglf90
+    ```
+
+2. Compile the f90 code with `f2py`
+    ```shell
+    python -m numpy.f2py spmatmul.f90 log_sgl_subfuns.f90 sgl_subfuns.f90 sparsegl.f90 sparsegllog.f90 -m sparsegllog_module -h sparsegllog_module_1.pyf
+
+    python -m numpy.f2py --fcompiler=gnu95 -c sparsegllog_module_1.pyf spmatmul.f90 log_sgl_subfuns.f90 sgl_subfuns.f90 sparsegl.f90 sparsegllog.f90
+    ```
+
+    Please note that the above instructions are exactly the same as the ones at [midasmlpy/src/sparseglf90/README.md](midasmlpy/src/sparseglf90/README.md)
+
+3. Return to the root directory
+    ```shell
+    cd ../../..
+    ```
+
+4. Then, To install the `midasmlpy` package for development, do the following instead in “editable” mode:
+    ```shell
+    pip install -e .
+    ```
 
 ## Testing
 
-To run the tests, run:
-```shell
-pytest --pyargs src
-```
+We are using `unittest` as the testing framework for our package. Please set up testing for this framework as per the instructions in the [Python testing in Visual Studio Code](https://code.visualstudio.com/docs/python/testing) document. If successful, VS Code should be able to autodetect the tests should be showing up at the Test Explorer view accessible via the beaker icon displayed on the VS Code Activity bar. Note we have assumed that you have the Python extension installed and a Python file open within the editor. 
+
+To run the tests, please click on the run icon next to the tests in the Test Explorer, like in the screenshot below:
+
+<img title="Test Explorer sample image" alt="Test Explorer sample image" src="./media/test-explorer-sample-image.png">
+
+> [!NOTE]  
+> The run icon only shows up if you hover your cursor over the relevant tests in the Test Explorer. 
 
 ## Remarks
 
