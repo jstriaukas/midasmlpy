@@ -87,7 +87,7 @@ We are using `unittest` as the testing framework for our package. Please set up 
 
 To run the tests, please click on the run icon next to the tests in the Test Explorer, like in the screenshot below:
 
-<img title="Test Explorer sample image" alt="Test Explorer sample image" src="./media/test-explorer-sample-image.png" style="max-width: 350px;">
+<img title="Test Explorer sample image" alt="Test Explorer sample image" src="./media/test-explorer-sample-image.png" width="300px;">
 
 > [!NOTE]  
 > The run icon only shows up if you hover your cursor over the relevant tests in the Test Explorer. 
