@@ -3,6 +3,7 @@ from scipy.sparse.linalg import svds
 from sklearn.metrics import accuracy_score, roc_auc_score, mean_squared_error, r2_score
 from sklearn.model_selection import StratifiedKFold, KFold
 import random
+from sklearn.model_selection import train_test_split
 
 from midasmlpy.src.sparseglf90 import sparsegllog_module
 
@@ -103,52 +104,52 @@ def sgLASSO_estimation(x, y, group_size, alsparse, family='binomial', pmax=100, 
     if family == 'binomial':
         gam = 0.25 * calc_gamma(x, ix, iy, bn)  # Calculate gamma values for each group of features (columns)
         _nalam, b0, beta, _activeGroup, _nbeta, alam, npass, jerr = (sparsegllog_module.log_sparse_four(x=x,
-                                                                                              y=y, bn=bn,
-                                                                                              bs=bs,
-                                                                                              ix=ix + 1,
-                                                                                              iy=iy + 1,
-                                                                                              # iy and ix are +1 as fortran is index 1 while python is index 0
-                                                                                              gam=gam,
-                                                                                              nobs=nobs,
-                                                                                              nvars=nvars,
-                                                                                              pf=pf,
-                                                                                              pfl1=pfl1,
-                                                                                              dfmax=dfmax,
-                                                                                              pmax=pmax,
-                                                                                              nlam=nlam,
-                                                                                              flmin=flmin,
-                                                                                              ulam=ulam,
-                                                                                              eps=eps,
-                                                                                              maxit=maxit,
-                                                                                              intr=intr,
-                                                                                              lb=lb, ub=ub,
-                                                                                              alsparse=alsparse))
+                                                                                                        y=y, bn=bn,
+                                                                                                        bs=bs,
+                                                                                                        ix=ix + 1,
+                                                                                                        iy=iy + 1,
+                                                                                                        # iy and ix are +1 as fortran is index 1 while python is index 0
+                                                                                                        gam=gam,
+                                                                                                        nobs=nobs,
+                                                                                                        nvars=nvars,
+                                                                                                        pf=pf,
+                                                                                                        pfl1=pfl1,
+                                                                                                        dfmax=dfmax,
+                                                                                                        pmax=pmax,
+                                                                                                        nlam=nlam,
+                                                                                                        flmin=flmin,
+                                                                                                        ulam=ulam,
+                                                                                                        eps=eps,
+                                                                                                        maxit=maxit,
+                                                                                                        intr=intr,
+                                                                                                        lb=lb, ub=ub,
+                                                                                                        alsparse=alsparse))
         mse = None  # to make it easier to return the same number of variables for all families
     if family == 'gaussian':
         if intr:
             y = y - y.mean()
-        gam = calc_gamma(x, ix, iy, bn)  # Calculate gamma values for each group of features (columns)
+        gam = calc_gamma(x, ix, iy, bn)  # calculates gamma values for each group of features (columns)
         _nalam, b0, beta, _activeGroup, _nbeta, alam, npass, jerr, mse = sparsegllog_module.sparse_four(x=x,
-                                                                                                     y=y, bn=bn,
-                                                                                                     bs=bs,
-                                                                                                     ix=ix + 1,
-                                                                                                     iy=iy + 1,
-                                                                                                     # iy and ix are +1 as fortran is index 1 while python is index 0
-                                                                                                     gam=gam,
-                                                                                                     nobs=nobs,
-                                                                                                     nvars=nvars,
-                                                                                                     pf=pf,
-                                                                                                     pfl1=pfl1,
-                                                                                                     dfmax=dfmax,
-                                                                                                     pmax=pmax,
-                                                                                                     nlam=nlam,
-                                                                                                     flmin=flmin,
-                                                                                                     ulam=ulam,
-                                                                                                     eps=eps,
-                                                                                                     maxit=maxit,
-                                                                                                     intr=intr,
-                                                                                                     lb=lb, ub=ub,
-                                                                                                     alsparse=alsparse)
+                                                                                                        y=y, bn=bn,
+                                                                                                        bs=bs,
+                                                                                                        ix=ix + 1,
+                                                                                                        iy=iy + 1,
+                                                                                                        # iy and ix are +1 as fortran is index 1 while python is index 0
+                                                                                                        gam=gam,
+                                                                                                        nobs=nobs,
+                                                                                                        nvars=nvars,
+                                                                                                        pf=pf,
+                                                                                                        pfl1=pfl1,
+                                                                                                        dfmax=dfmax,
+                                                                                                        pmax=pmax,
+                                                                                                        nlam=nlam,
+                                                                                                        flmin=flmin,
+                                                                                                        ulam=ulam,
+                                                                                                        eps=eps,
+                                                                                                        maxit=maxit,
+                                                                                                        intr=intr,
+                                                                                                        lb=lb, ub=ub,
+                                                                                                        alsparse=alsparse)
     if jerr != 0:
         raise ValueError("Error in the sparse group LASSO estimation.")
     if npass == maxit:
@@ -280,7 +281,7 @@ def best_lambda_find(x, y, group_size, alsparse, family='binomial', nlam=100, pm
         - 'best_lambda' (float): The lambda value of the best model.
     """
     # Find model nlam number of models
-    b0, beta, alam, _npass, _jerr, mse = sgLASSO_estimation(x, y, group_size, alsparse, family, pmax, intr)
+    b0, beta, alam, _npass, _jerr, _mse = sgLASSO_estimation(x, y, group_size, alsparse, family, pmax, intr)
 
     kf = StratifiedKFold(n_splits=k_folds)
 
@@ -292,20 +293,19 @@ def best_lambda_find(x, y, group_size, alsparse, family='binomial', nlam=100, pm
         kf = KFold(n_splits=k_folds)
 
     best_lambda = None
-
+    
     # initialize performance list
     performance = []
-    for train_index, test_index in kf.split(x, y):
+    for train_index, test_index in kf.split(x,y):
         # Based on the split, create the training and test data for this fold
         x_train, x_test = x[train_index], x[test_index]
         y_train, y_test = y[train_index], y[test_index]
         # Estimate the model on the training data
-        b0test, beta_test, _alam, _npass, _jerr, mse_train = sgLASSO_estimation(x_train, y_train, group_size, alsparse,
-                                                                              family, pmax=pmax, intr=intr, ulam=alam)
+        b0test, betatest, _alam, _npass, _jerr, _mse_test = sgLASSO_estimation(x_train, y_train, group_size, alsparse, family, pmax = pmax, intr = intr, ulam = alam)
         if family == 'gaussian':
-            performance.append(evaluate_gaussian(x_test, y_test, b0test, beta_test, intr, eval='mse'))
+            performance.append(evaluate_gaussian(x_test, y_test, b0test, betatest,intr,eval = 'mse'))
         if family == 'binomial':
-            performance.append(evaluate_binomials(x_test, y_test, b0test, beta_test, eval='auc', threshold=0.5))
+            performance.append(evaluate_binomials(x_test, y_test, b0test, betatest,eval = 'auc', threshold=0.5))
 
     performance = np.array(performance)
     mean_performance = np.mean(performance, axis=0)
@@ -313,13 +313,14 @@ def best_lambda_find(x, y, group_size, alsparse, family='binomial', nlam=100, pm
         best_lambda = np.argmin(mean_performance)
     if family == 'binomial':
         best_lambda = np.argmax(mean_performance)
-    return {'b0': b0, # b0[best_lambda],
-            'beta': beta, # beta[:, best_lambda],
-            'best_performance': mean_performance[best_lambda],
+    return {'b0': b0,  # b0[best_lambda], 
+            'beta': beta,  # beta[:,best_lambda], 
+            'best_performance': mean_performance[best_lambda], 
             'best_lambda': alam[best_lambda]}
 
 
-def best_model(x, y, group_size, family='binomial', nlam=100, pmax=100, intr=True, k_folds=5, disp_flag=True, alpha_values=None,
+def best_model(x, y, group_size, family='binomial', nlam=100, 
+               pmax=100, intr=True, k_folds=5, disp_flag=True, alpha_values=None,
                alpha=None):
     """
     Function to find the best model based on the maximized performance of the model. The function uses the bestlambda function to find the best lambda value for the model.
@@ -368,8 +369,9 @@ def best_model(x, y, group_size, family='binomial', nlam=100, pmax=100, intr=Tru
 
     # Cross-validation process
     for alsparse in alsparse_values:
-        model_result = best_lambda_find(x, y, group_size, alsparse, family, nlam=nlam, pmax=pmax, intr=intr,
-                                        k_folds=k_folds)
+        model_result = best_lambda_find(x, y, group_size, alsparse, family, nlam=nlam, pmax=pmax, 
+                                        intr=intr, k_folds=k_folds)
+        
         # Append the maximized performance of this fold
         if disp_flag:
             performance_dict[alsparse] = model_result['best_performance'].round(5)
@@ -406,3 +408,7 @@ def best_model(x, y, group_size, family='binomial', nlam=100, pmax=100, intr=Tru
             'b0': b0,
             'beta': beta,
             'best_lambda': best_lambda}
+
+
+def test_module():
+    print("Testing the sparse group LASSO module...")
