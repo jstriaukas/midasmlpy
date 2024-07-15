@@ -130,7 +130,6 @@ SUBROUTINE sparse_four (bn,bs,ix,iy,gam,nobs,nvars,x,y,pf,pfl1,dfmax,pmax,nlam,&
         ENDIF
         ! --inner loop-------------------------------------
         DO
-           print *, "This is where we enter the inner loop"
            npass = npass + 1
            maxDif = 0.0D0
            isDifZero = 0 !Boolean to check if b-oldb nonzero. Unnec, in fn.

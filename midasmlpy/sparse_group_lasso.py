@@ -104,7 +104,8 @@ def sgLASSO_estimation(x, y, group_size, alsparse, family='binomial', pmax=100, 
     if family == 'binomial':
         gam = 0.25 * calc_gamma(x, ix, iy, bn)  # Calculate gamma values for each group of features (columns)
         _nalam, b0, beta, _activeGroup, _nbeta, alam, npass, jerr = (sparsegllog_module.log_sparse_four(x=x,
-                                                                                                        y=y, bn=bn,
+                                                                                                        y=y, 
+                                                                                                        bn=bn,
                                                                                                         bs=bs,
                                                                                                         ix=ix + 1,
                                                                                                         iy=iy + 1,
@@ -130,7 +131,8 @@ def sgLASSO_estimation(x, y, group_size, alsparse, family='binomial', pmax=100, 
             y = y - y.mean()
         gam = calc_gamma(x, ix, iy, bn)  # calculates gamma values for each group of features (columns)
         _nalam, b0, beta, _activeGroup, _nbeta, alam, npass, jerr, mse = sparsegllog_module.sparse_four(x=x,
-                                                                                                        y=y, bn=bn,
+                                                                                                        y=y, 
+                                                                                                        bn=bn,
                                                                                                         bs=bs,
                                                                                                         ix=ix + 1,
                                                                                                         iy=iy + 1,
@@ -301,11 +303,11 @@ def best_lambda_find(x, y, group_size, alsparse, family='binomial', nlam=100, pm
         x_train, x_test = x[train_index], x[test_index]
         y_train, y_test = y[train_index], y[test_index]
         # Estimate the model on the training data
-        b0test, betatest, _alam, _npass, _jerr, _mse_test = sgLASSO_estimation(x_train, y_train, group_size, alsparse, family, pmax = pmax, intr = intr, ulam = alam)
+        b0test, beta_test, _alam, _npass, _jerr, _mse_test = sgLASSO_estimation(x_train, y_train, group_size, alsparse, family=family, pmax=pmax, intr=intr, ulam=alam)
         if family == 'gaussian':
-            performance.append(evaluate_gaussian(x_test, y_test, b0test, betatest,intr,eval = 'mse'))
+            performance.append(evaluate_gaussian(x_test, y_test, b0test, beta_test, intr,eval='mse'))
         if family == 'binomial':
-            performance.append(evaluate_binomials(x_test, y_test, b0test, betatest,eval = 'auc', threshold=0.5))
+            performance.append(evaluate_binomials(x_test, y_test, b0test, beta_test, eval='auc', threshold=0.5))
 
     performance = np.array(performance)
     mean_performance = np.mean(performance, axis=0)
@@ -313,8 +315,8 @@ def best_lambda_find(x, y, group_size, alsparse, family='binomial', nlam=100, pm
         best_lambda = np.argmin(mean_performance)
     if family == 'binomial':
         best_lambda = np.argmax(mean_performance)
-    return {'b0': b0,  # b0[best_lambda], 
-            'beta': beta,  # beta[:,best_lambda], 
+    return {'b0': b0, 
+            'beta': beta, 
             'best_performance': mean_performance[best_lambda], 
             'best_lambda': alam[best_lambda]}
 
@@ -369,8 +371,8 @@ def best_model(x, y, group_size, family='binomial', nlam=100,
 
     # Cross-validation process
     for alsparse in alsparse_values:
-        model_result = best_lambda_find(x, y, group_size, alsparse, family, nlam=nlam, pmax=pmax, 
-                                        intr=intr, k_folds=k_folds)
+        model_result = best_lambda_find(x, y, group_size, alsparse, family=family, 
+                                        nlam=nlam, pmax=pmax, intr=intr, k_folds=k_folds)
         
         # Append the maximized performance of this fold
         if disp_flag:
@@ -383,22 +385,7 @@ def best_model(x, y, group_size, family='binomial', nlam=100,
             b0 = model_result['b0']
             beta = model_result['beta']
             best_lambda = model_result['best_lambda']
-        else:
-            if family == 'gaussian':
-                if model_result['best_performance'] < best_performance:
-                    best_performance = model_result['best_performance']
-                    best_alsparse = alsparse
-                    b0 = model_result['b0']
-                    beta = model_result['beta']
-                    best_lambda = model_result['best_lambda']
-            if family == 'binomial':
-                if model_result['best_performance'] > best_performance:
-                    best_performance = model_result['best_performance']
-                    best_alsparse = alsparse
-                    b0 = model_result['b0']
-                    beta = model_result['beta']
-                    best_lambda = model_result['best_lambda']
-
+    
     if disp_flag:
         print('The performance at different values of alpha are:')
         print(performance_dict)
@@ -408,7 +395,3 @@ def best_model(x, y, group_size, family='binomial', nlam=100,
             'b0': b0,
             'beta': beta,
             'best_lambda': best_lambda}
-
-
-def test_module():
-    print("Testing the sparse group LASSO module...")

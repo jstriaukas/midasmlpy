@@ -1,10 +1,10 @@
 !    -*- f90 -*-
 ! Note: the context of this file is case sensitive.
 
-python module midasmlpy/src/sparseglf90/sparsegllog_module ! in 
-    interface  ! in :midasmlpy/src/sparseglf90/sparsegllog_module
-        module spmatmul ! in :midasmlpy/src/sparseglf90/sparsegllog_module:midasmlpy/src/sparseglf90/spmatmul.f90
-            subroutine ymspax(a,ridx,cptr,n,p,nnz,x,y,cj,ck,lx) ! in :midasmlpy/src/sparseglf90/sparsegllog_module:midasmlpy/src/sparseglf90/spmatmul.f90:spmatmul
+python module sparsegllog_module ! in 
+    interface  ! in :sparsegllog_module
+        module spmatmul ! in :sparsegllog_module:spmatmul.f90
+            subroutine ymspax(a,ridx,cptr,n,p,nnz,x,y,cj,ck,lx) ! in :sparsegllog_module:spmatmul.f90:spmatmul
                 double precision dimension(nnz),intent(in) :: a
                 integer dimension(nnz),intent(in),depend(nnz) :: ridx
                 integer dimension(1 + p),intent(in) :: cptr
@@ -17,7 +17,7 @@ python module midasmlpy/src/sparseglf90/sparsegllog_module ! in
                 integer :: ck
                 integer, optional,check(shape(x, 0) == lx),depend(x) :: lx=shape(x, 0)
             end subroutine ymspax
-            subroutine ypbspax(a,b,ridx,cptr,n,p,nnz,x,y,cj,ck,lx) ! in :midasmlpy/src/sparseglf90/sparsegllog_module:midasmlpy/src/sparseglf90/spmatmul.f90:spmatmul
+            subroutine ypbspax(a,b,ridx,cptr,n,p,nnz,x,y,cj,ck,lx) ! in :sparsegllog_module:spmatmul.f90:spmatmul
                 double precision dimension(nnz),intent(in) :: a
                 double precision dimension(n),intent(in) :: b
                 integer dimension(nnz),intent(in),depend(nnz) :: ridx
@@ -31,7 +31,7 @@ python module midasmlpy/src/sparseglf90/sparsegllog_module ! in
                 integer :: ck
                 integer, optional,check(shape(x, 0) == lx),depend(x) :: lx=shape(x, 0)
             end subroutine ypbspax
-            subroutine spatx(a,ridx,cptr,n,p,nnz,x,y,cj,ck) ! in :midasmlpy/src/sparseglf90/sparsegllog_module:midasmlpy/src/sparseglf90/spmatmul.f90:spmatmul
+            subroutine spatx(a,ridx,cptr,n,p,nnz,x,y,cj,ck) ! in :sparsegllog_module:spmatmul.f90:spmatmul
                 double precision dimension(nnz),intent(in) :: a
                 integer dimension(nnz),intent(in),depend(nnz) :: ridx
                 integer dimension(1 + p),intent(in) :: cptr
@@ -39,19 +39,19 @@ python module midasmlpy/src/sparseglf90/sparsegllog_module ! in
                 integer, optional,check(shape(cptr, 0) == 1 + p),depend(cptr) :: p=-1 + shape(cptr, 0)
                 integer, optional,check(shape(a, 0) == nnz),depend(a) :: nnz=shape(a, 0)
                 double precision dimension(n),intent(in) :: x
-                double precision dimension(1 - cj + ck),intent(inout),check(shape(y, 0) == 1 - cj + ck,shape(y, 0) == 1 - cj + ck),depend(ck,cj) :: y
+                double precision dimension(1 - cj + ck),intent(inout),check(shape(y, 0) == 1 - cj + ck,shape(y, 0) == 1 - cj + ck),depend(cj,ck) :: y
                 integer, required,intent(in) :: cj
                 integer, required,intent(in) :: ck
             end subroutine spatx
-            subroutine softthresh(vec,thresh,n) ! in :midasmlpy/src/sparseglf90/sparsegllog_module:midasmlpy/src/sparseglf90/spmatmul.f90:spmatmul
+            subroutine softthresh(vec,thresh,n) ! in :sparsegllog_module:spmatmul.f90:spmatmul
                 double precision dimension(n) :: vec
                 double precision dimension(n),depend(n) :: thresh
                 integer, optional,check(shape(vec, 0) == n),depend(vec) :: n=shape(vec, 0)
             end subroutine softthresh
         end module spmatmul
-        module log_sgl_subfuns ! in :midasmlpy/src/sparseglf90/sparsegllog_module:midasmlpy/src/sparseglf90/log_sgl_subfuns.f90
+        module log_sgl_subfuns ! in :sparsegllog_module:log_sgl_subfuns.f90
             use spmatmul
-            subroutine log_update_step(bsg,startix,endix,b,lama,t_for_sg,pfg,pfl1,lam1ma,x,y,isdifzero,nobs,r,gamg,maxdif,nvars,lb,ub) ! in :midasmlpy/src/sparseglf90/sparsegllog_module:midasmlpy/src/sparseglf90/log_sgl_subfuns.f90:log_sgl_subfuns
+            subroutine log_update_step(bsg,startix,endix,b,lama,t_for_sg,pfg,pfl1,lam1ma,x,y,isdifzero,nobs,r,gamg,maxdif,nvars,lb,ub) ! in :sparsegllog_module:log_sgl_subfuns.f90:log_sgl_subfuns
                 integer, optional,intent(in),check(shape(pfl1, 0) == bsg),depend(pfl1) :: bsg=shape(pfl1, 0)
                 integer intent(in) :: startix
                 integer intent(in) :: endix
@@ -72,7 +72,7 @@ python module midasmlpy/src/sparseglf90/sparsegllog_module ! in
                 double precision intent(in) :: lb
                 double precision intent(in) :: ub
             end subroutine log_update_step
-            subroutine log_sp_update_step(bsg,startix,endix,b,lama,t_for_sg,pfg,pfl1,lam1ma,x,y,xidx,xcptr,nnz,isdifzero,nobs,r,gamg,maxdif,nvars,lb,ub) ! in :midasmlpy/src/sparseglf90/sparsegllog_module:midasmlpy/src/sparseglf90/log_sgl_subfuns.f90:log_sgl_subfuns
+            subroutine log_sp_update_step(bsg,startix,endix,b,lama,t_for_sg,pfg,pfl1,lam1ma,x,y,xidx,xcptr,nnz,isdifzero,nobs,r,gamg,maxdif,nvars,lb,ub) ! in :sparsegllog_module:log_sgl_subfuns.f90:log_sgl_subfuns
                 integer, optional,intent(in),check(shape(pfl1, 0) == bsg),depend(pfl1) :: bsg=shape(pfl1, 0)
                 integer intent(in) :: startix
                 integer intent(in) :: endix
@@ -97,16 +97,16 @@ python module midasmlpy/src/sparseglf90/sparsegllog_module ! in
                 double precision intent(in) :: ub
             end subroutine log_sp_update_step
         end module log_sgl_subfuns
-        module sgl_subfuns ! in :midasmlpy/src/sparseglf90/sparsegllog_module:midasmlpy/src/sparseglf90/sgl_subfuns.f90
+        module sgl_subfuns ! in :sparsegllog_module:sgl_subfuns.f90
             use spmatmul
-            subroutine strong_rule(is_in_e_set,ga,pf,tlam,alsparse) ! in :midasmlpy/src/sparseglf90/sparsegllog_module:midasmlpy/src/sparseglf90/sgl_subfuns.f90:sgl_subfuns
+            subroutine strong_rule(is_in_e_set,ga,pf,tlam,alsparse) ! in :sparsegllog_module:sgl_subfuns.f90:sgl_subfuns
                 integer dimension(:),intent(inout) :: is_in_e_set
                 double precision dimension(:),intent(in) :: ga
                 double precision dimension(:),intent(in) :: pf
                 double precision intent(in) :: tlam
                 double precision intent(in) :: alsparse
             end subroutine strong_rule
-            subroutine kkt_check(is_in_e_set,violation,bn,ix,iy,vl,pf,pfl1,lam1ma,bs,lama,ga,nvars) ! in :midasmlpy/src/sparseglf90/sparsegllog_module:midasmlpy/src/sparseglf90/sgl_subfuns.f90:sgl_subfuns
+            subroutine kkt_check(is_in_e_set,violation,bn,ix,iy,vl,pf,pfl1,lam1ma,bs,lama,ga,nvars) ! in :sparsegllog_module:sgl_subfuns.f90:sgl_subfuns
                 integer dimension(:),intent(inout) :: is_in_e_set
                 integer intent(inout) :: violation
                 integer, optional,intent(in),check(shape(ix, 0) == bn),depend(ix) :: bn=shape(ix, 0)
@@ -121,7 +121,7 @@ python module midasmlpy/src/sparseglf90/sparsegllog_module ! in
                 double precision dimension(:),intent(inout) :: ga
                 integer, optional,check(shape(pfl1, 0) == nvars),depend(pfl1) :: nvars=shape(pfl1, 0)
             end subroutine kkt_check
-            subroutine update_step(bsg,startix,endix,b,lama,t_for_sg,pfg,pfl1,lam1ma,x,isdifzero,nobs,r,gamg,maxdif,nvars,lb,ub) ! in :midasmlpy/src/sparseglf90/sparsegllog_module:midasmlpy/src/sparseglf90/sgl_subfuns.f90:sgl_subfuns
+            subroutine update_step(bsg,startix,endix,b,lama,t_for_sg,pfg,pfl1,lam1ma,x,isdifzero,nobs,r,gamg,maxdif,nvars,lb,ub) ! in :sparsegllog_module:sgl_subfuns.f90:sgl_subfuns
                 integer, optional,intent(in),check(shape(pfl1, 0) == bsg),depend(pfl1) :: bsg=shape(pfl1, 0)
                 integer intent(in) :: startix
                 integer intent(in) :: endix
@@ -141,7 +141,7 @@ python module midasmlpy/src/sparseglf90/sparsegllog_module ! in
                 double precision intent(in) :: lb
                 double precision intent(in) :: ub
             end subroutine update_step
-            subroutine strong_kkt_check(is_in_e_set,violation,bn,ix,iy,pf,pfl1,lam1ma,bs,lama,ga,is_in_s_set,x,r,nobs,nvars,vl) ! in :midasmlpy/src/sparseglf90/sparsegllog_module:midasmlpy/src/sparseglf90/sgl_subfuns.f90:sgl_subfuns
+            subroutine strong_kkt_check(is_in_e_set,violation,bn,ix,iy,pf,pfl1,lam1ma,bs,lama,ga,is_in_s_set,x,r,nobs,nvars,vl) ! in :sparsegllog_module:sgl_subfuns.f90:sgl_subfuns
                 integer dimension(:),intent(inout) :: is_in_e_set
                 integer intent(inout) :: violation
                 integer, optional,intent(in),check(shape(ix, 0) == bn),depend(ix) :: bn=shape(ix, 0)
@@ -160,7 +160,7 @@ python module midasmlpy/src/sparseglf90/sparsegllog_module ! in
                 integer, optional,intent(in),check(shape(pfl1, 0) == nvars),depend(pfl1) :: nvars=shape(pfl1, 0)
                 double precision dimension(:),intent(inout) :: vl
             end subroutine strong_kkt_check
-            subroutine sp_update_step(bsg,startix,endix,b,lama,t_for_sg,pfg,pfl1,lam1ma,x,xidx,xcptr,nnz,isdifzero,nobs,r,gamg,maxdif,nvars,lb,ub) ! in :midasmlpy/src/sparseglf90/sparsegllog_module:midasmlpy/src/sparseglf90/sgl_subfuns.f90:sgl_subfuns
+            subroutine sp_update_step(bsg,startix,endix,b,lama,t_for_sg,pfg,pfl1,lam1ma,x,xidx,xcptr,nnz,isdifzero,nobs,r,gamg,maxdif,nvars,lb,ub) ! in :sparsegllog_module:sgl_subfuns.f90:sgl_subfuns
                 integer, optional,intent(in),check(shape(pfl1, 0) == bsg),depend(pfl1) :: bsg=shape(pfl1, 0)
                 integer intent(in) :: startix
                 integer intent(in) :: endix
@@ -183,7 +183,7 @@ python module midasmlpy/src/sparseglf90/sparsegllog_module ! in
                 double precision intent(in) :: lb
                 double precision intent(in) :: ub
             end subroutine sp_update_step
-            subroutine sp_strong_kkt_check(is_in_e_set,violation,bn,ix,iy,pf,pfl1,lam1ma,bs,lama,ga,is_in_s_set,x,xidx,xcptr,nnz,r,nobs,nvars,vl) ! in :midasmlpy/src/sparseglf90/sparsegllog_module:midasmlpy/src/sparseglf90/sgl_subfuns.f90:sgl_subfuns
+            subroutine sp_strong_kkt_check(is_in_e_set,violation,bn,ix,iy,pf,pfl1,lam1ma,bs,lama,ga,is_in_s_set,x,xidx,xcptr,nnz,r,nobs,nvars,vl) ! in :sparsegllog_module:sgl_subfuns.f90:sgl_subfuns
                 integer dimension(:),intent(inout) :: is_in_e_set
                 integer intent(inout) :: violation
                 integer, optional,intent(in),check(shape(ix, 0) == bn),depend(ix) :: bn=shape(ix, 0)
@@ -206,7 +206,7 @@ python module midasmlpy/src/sparseglf90/sparsegllog_module ! in
                 double precision dimension(:),intent(inout) :: vl
             end subroutine sp_strong_kkt_check
         end module sgl_subfuns
-        subroutine sparse_four(bn,bs,ix,iy,gam,nobs,nvars,x,y,pf,pfl1,dfmax,pmax,nlam,flmin,ulam,eps,maxit,intr,nalam,b0,beta,activegroup,nbeta,alam,npass,jerr,mse,alsparse,lb,ub) ! in :midasmlpy/src/sparseglf90/sparsegllog_module:midasmlpy/src/sparseglf90/sparsegl.f90
+        subroutine sparse_four(bn,bs,ix,iy,gam,nobs,nvars,x,y,pf,pfl1,dfmax,pmax,nlam,flmin,ulam,eps,maxit,intr,nalam,b0,beta,activegroup,nbeta,alam,npass,jerr,mse,alsparse,lb,ub) ! in :sparsegllog_module:sparsegl.f90
             use sgl_subfuns
             integer, optional,intent(in),check(shape(bs, 0) == bn),depend(bs) :: bn=shape(bs, 0)
             integer dimension(bn),intent(in) :: bs
@@ -240,7 +240,7 @@ python module midasmlpy/src/sparseglf90/sparsegllog_module ! in
             double precision dimension(bn),intent(in),depend(bn) :: lb
             double precision dimension(bn),intent(in),depend(bn) :: ub
         end subroutine sparse_four
-        subroutine spmat_four(bn,bs,ix,iy,gam,nobs,nvars,x,xidx,xcptr,nnz,y,pf,pfl1,dfmax,pmax,nlam,flmin,ulam,eps,maxit,intr,nalam,b0,beta,activegroup,nbeta,alam,npass,jerr,mse,alsparse,lb,ub) ! in :midasmlpy/src/sparseglf90/sparsegllog_module:midasmlpy/src/sparseglf90/sparsegl.f90
+        subroutine spmat_four(bn,bs,ix,iy,gam,nobs,nvars,x,xidx,xcptr,nnz,y,pf,pfl1,dfmax,pmax,nlam,flmin,ulam,eps,maxit,intr,nalam,b0,beta,activegroup,nbeta,alam,npass,jerr,mse,alsparse,lb,ub) ! in :sparsegllog_module:sparsegl.f90
             use sgl_subfuns
             use spmatmul
             integer, optional,check(shape(bs, 0) == bn),depend(bs) :: bn=shape(bs, 0)
@@ -278,7 +278,7 @@ python module midasmlpy/src/sparseglf90/sparsegllog_module ! in
             double precision dimension(bn),intent(in),depend(bn) :: lb
             double precision dimension(bn),intent(in),depend(bn) :: ub
         end subroutine spmat_four
-        subroutine log_sparse_four(bn,bs,ix,iy,gam,nobs,nvars,x,y,pf,pfl1,dfmax,pmax,nlam,flmin,ulam,eps,maxit,intr,nalam,b0,beta,activegroup,nbeta,alam,npass,jerr,alsparse,lb,ub) ! in :midasmlpy/src/sparseglf90/sparsegllog_module:midasmlpy/src/sparseglf90/sparsegllog.f90
+        subroutine log_sparse_four(bn,bs,ix,iy,gam,nobs,nvars,x,y,pf,pfl1,dfmax,pmax,nlam,flmin,ulam,eps,maxit,intr,nalam,b0,beta,activegroup,nbeta,alam,npass,jerr,alsparse,lb,ub) ! in :sparsegllog_module:sparsegllog.f90
             use log_sgl_subfuns
             use sgl_subfuns
             integer, optional,intent(in),check(shape(bs, 0) == bn),depend(bs) :: bn=shape(bs, 0)
@@ -312,7 +312,7 @@ python module midasmlpy/src/sparseglf90/sparsegllog_module ! in
             double precision dimension(bn),intent(in),depend(bn) :: lb
             double precision dimension(bn),intent(in),depend(bn) :: ub
         end subroutine log_sparse_four
-        subroutine log_spmat_four(bn,bs,ix,iy,gam,nobs,nvars,x,xidx,xcptr,nnz,y,pf,pfl1,dfmax,pmax,nlam,flmin,ulam,eps,maxit,intr,nalam,b0,beta,activegroup,nbeta,alam,npass,jerr,alsparse,lb,ub) ! in :midasmlpy/src/sparseglf90/sparsegllog_module:midasmlpy/src/sparseglf90/sparsegllog.f90
+        subroutine log_spmat_four(bn,bs,ix,iy,gam,nobs,nvars,x,xidx,xcptr,nnz,y,pf,pfl1,dfmax,pmax,nlam,flmin,ulam,eps,maxit,intr,nalam,b0,beta,activegroup,nbeta,alam,npass,jerr,alsparse,lb,ub) ! in :sparsegllog_module:sparsegllog.f90
             use log_sgl_subfuns
             use sgl_subfuns
             use spmatmul
@@ -351,7 +351,7 @@ python module midasmlpy/src/sparseglf90/sparsegllog_module ! in
             double precision dimension(bn),intent(in),depend(bn) :: ub
         end subroutine log_spmat_four
     end interface 
-end python module midasmlpy/src/sparseglf90/sparsegllog_module
+end python module sparsegllog_module
 
 ! This file was auto-generated with f2py (version:2.0.0).
 ! See:

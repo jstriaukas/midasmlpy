@@ -471,10 +471,10 @@ def data_transform(Y, Y_date, X, X_date, x_lags, y_lags, horizon, weight_matrix=
     This function takes the Y and X data and creates the X_tilde matrix by multiplying the X matrix with the legendre matrix.
     
     Parameters:
-    - Y (ndarray): The target variable
-    - Y_date (ndarray): The dates of the target variable
     - X (ndarray): The predictors
     - X_date (ndarray): The dates of the predictors
+    - Y (ndarray): The target variable
+    - Y_date (ndarray): The dates of the target variable
     - x_lags (int): The number of lags to be created for the predictors
     - y_lags (int): The number of lags to be created for the target variable
     - horizon (int): The number of periods to forecast ahead
