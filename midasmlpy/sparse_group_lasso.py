@@ -317,8 +317,10 @@ def best_lambda_find(x, y, group_size, alsparse, family='binomial', nlam=100, pm
         best_lambda = np.argmax(mean_performance)
     return {'b0': b0, 
             'beta': beta, 
-            'best_performance': mean_performance[best_lambda], 
-            'best_lambda': alam[best_lambda]}
+            'best_performance': mean_performance[best_lambda],
+            'best_lambda_index': best_lambda,
+            'best_lambda': alam[best_lambda]
+            }
 
 
 def best_model(x, y, group_size, family='binomial', nlam=100, 
@@ -351,7 +353,8 @@ def best_model(x, y, group_size, family='binomial', nlam=100,
 
     Returns:
     dict
-        A dictionary containing the best alpha value, the best performance, the intercept and the coefficients of the model
+        A dictionary containing the best alpha value, the best performance, 
+        the best lambda index, the intercept, as well as the coefficients of the model 
     """
 
     best_performance = None
@@ -384,7 +387,25 @@ def best_model(x, y, group_size, family='binomial', nlam=100,
             best_alsparse = alsparse
             b0 = model_result['b0']
             beta = model_result['beta']
+            best_lambda_index = model_result['best_lambda_index']
             best_lambda = model_result['best_lambda']
+        else:
+            if family == 'gaussian':
+                if model_result['best_performance'] < best_performance:
+                    best_performance = model_result['best_performance']
+                    best_alsparse = alsparse
+                    b0 = model_result['b0']
+                    beta = model_result['beta']
+                    best_lambda_index = model_result['best_lambda_index']
+                    best_lambda = model_result['best_lambda']
+            if family == 'binomial':
+                if model_result['best_performance'] > best_performance:
+                    best_performance = model_result['best_performance']
+                    best_alsparse = alsparse
+                    b0 = model_result['b0']
+                    beta = model_result['beta']
+                    best_lambda_index = model_result['best_lambda_index']
+                    best_lambda = model_result['best_lambda']
     
     if disp_flag:
         print('The performance at different values of alpha are:')
@@ -394,4 +415,6 @@ def best_model(x, y, group_size, family='binomial', nlam=100,
             'best_performance': best_performance,
             'b0': b0,
             'beta': beta,
-            'best_lambda': best_lambda}
+            'best_lambda': best_lambda,
+            'best_beta': beta[best_lambda_index]
+            }

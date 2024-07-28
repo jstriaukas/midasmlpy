@@ -45,7 +45,7 @@ def diff_time_mf(time1, time2, origin, units=None):
 
 # Lag a number by a given period and unit
 def lag_num(x_lag, period, unit):
-    if type(x_lag) == int or float:
+    if type(x_lag) == int or type(x_lag) == float:
         return x_lag
     try:
         multiplier = float(x_lag[:-1])
@@ -491,7 +491,7 @@ def data_transform(Y, Y_date, X, X_date, x_lags, y_lags, horizon, weight_matrix=
     Y = Y
     X_date = X_date.astype(str)
     X = X.astype(np.float32)
-    # initialize empty X_tilde
+    # Initialize empty X_tilde
     X_tilde = []
     if weight_matrix is None:
         weight_matrix = legendre_matrix_create(x_lags, degree)
