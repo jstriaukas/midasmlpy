@@ -354,7 +354,7 @@ def best_model(x, y, group_size, family='binomial', nlam=100,
     Returns:
     dict
         A dictionary containing the best alpha value, the best performance, 
-        the best lambda index, the intercept, as well as the coefficients of the model 
+        the best lambda index, the best beta, the intercept, as well as the coefficients of the model 
     """
 
     best_performance = None
@@ -416,5 +416,6 @@ def best_model(x, y, group_size, family='binomial', nlam=100,
             'b0': b0,
             'beta': beta,
             'best_lambda': best_lambda,
-            'best_beta': beta[best_lambda_index]
+            'best_beta': beta[best_lambda_index],
+            'best_lambda_index': best_lambda_index
             }
