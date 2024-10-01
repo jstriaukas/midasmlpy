@@ -20,6 +20,7 @@ def calc_gamma(x, ix, iy, bn):
     """
     Calculates a measure (gamma) for columns of matrix 'x' specified by ranges in 'ix' and 'iy'.
     """
+
     gamma = np.full(bn, np.nan)
     for g in range(bn):
         grabcols = slice(ix[g], iy[g] + 1)  # Python uses 0-based indexing
@@ -73,6 +74,7 @@ def sgLASSO_estimation(x, y, group_size, alsparse, family='binomial', pmax=100, 
             npass (int): The number of passes (iterations) over the data.
             jerr (int): An error code (if any) from the fitting process (0 means no error).
     """
+
     if ulam is not None:
         ulam = np.array(ulam)
         nlam = len(ulam)  # Override nlam based on the length of ulam if ulam is provided
@@ -178,6 +180,7 @@ def predict_binomial(x, b0, beta, threshold=0.5):
     Returns:
     - predictions (ndarray): A 1D numpy array of binary outcomes (0 or 1). Each element corresponds to a sample in `x`.
     """
+
     if b0 is None:
         b0 = 0
 
@@ -227,6 +230,7 @@ def predict_gaussian(x, b0, beta):
     Returns:
     - predictions (ndarray): A 1D numpy array of outcomes. Each element corresponds to a sample in `x`.
     """
+
     predictions = np.dot(x, beta) + b0
     return predictions
 
@@ -245,6 +249,7 @@ def evaluate_gaussian(x, y, b0, beta, intr, eval='mse'):
     Returns:
     - evaluation_scores (list): A list of scores, either MSE or R-squared, for each model.
     """
+
     evaluation_scores = [0] * len(b0)  # this will store evaluation scores
     for l in range(len(b0)):
 
@@ -282,6 +287,7 @@ def best_lambda_find(x, y, group_size, alsparse, family='binomial', nlam=100, pm
         - 'maximized_performance' (float): The maximized performance of the best model.
         - 'best_lambda' (float): The lambda value of the best model.
     """
+
     # Find model nlam number of models
     b0, beta, alam, _npass, _jerr, _mse = sgLASSO_estimation(x, y, group_size, alsparse, family, pmax, intr)
 
@@ -354,7 +360,7 @@ def best_model(x, y, group_size, family='binomial', nlam=100,
     Returns:
     dict
         A dictionary containing the best alpha value, the best performance, 
-        the best lambda index, the best beta, the intercept, as well as the coefficients of the model 
+        the best lambda index, the best beta, the selected regressors idx, the intercept, as well as the coefficients of the model 
     """
 
     best_performance = None
@@ -389,6 +395,13 @@ def best_model(x, y, group_size, family='binomial', nlam=100,
             beta = model_result['beta']
             best_lambda_index = model_result['best_lambda_index']
             best_lambda = model_result['best_lambda']
+            # Find `best beta values`
+            best_beta_values = beta[model_result['best_lambda_index']]
+            # Find non-zero indices in `best_beta_values`
+            non_zero_indices = np.nonzero(best_beta_values)[0]
+            # Find group indices by dividing non-zero indices by `degree`
+            group_indices = np.floor(non_zero_indices / group_size).astype(int)  # Integer conversion
+            selected_regressors_idx = np.unique(group_indices)
         else:
             if family == 'gaussian':
                 if model_result['best_performance'] < best_performance:
@@ -398,6 +411,13 @@ def best_model(x, y, group_size, family='binomial', nlam=100,
                     beta = model_result['beta']
                     best_lambda_index = model_result['best_lambda_index']
                     best_lambda = model_result['best_lambda']
+                    # Find `best beta values`
+                    best_beta_values = beta[model_result['best_lambda_index']]
+                    # Find non-zero indices in `best_beta_values`
+                    non_zero_indices = np.nonzero(best_beta_values)[0]
+                    # Find group indices by dividing non-zero indices by `degree`
+                    group_indices = np.floor(non_zero_indices / group_size).astype(int)  # Integer conversion
+                    selected_regressors_idx = np.unique(group_indices)
             if family == 'binomial':
                 if model_result['best_performance'] > best_performance:
                     best_performance = model_result['best_performance']
@@ -406,6 +426,13 @@ def best_model(x, y, group_size, family='binomial', nlam=100,
                     beta = model_result['beta']
                     best_lambda_index = model_result['best_lambda_index']
                     best_lambda = model_result['best_lambda']
+                    # Find `best beta values`
+                    best_beta_values = beta[model_result['best_lambda_index']]
+                    # Find non-zero indices in `best_beta_values`
+                    non_zero_indices = np.nonzero(best_beta_values)[0]
+                    # Find group indices by dividing non-zero indices by `degree`
+                    group_indices = np.floor(non_zero_indices / group_size).astype(int)  # Integer conversion
+                    selected_regressors_idx = np.unique(group_indices)
     
     if disp_flag:
         print('The performance at different values of alpha are:')
@@ -417,5 +444,6 @@ def best_model(x, y, group_size, family='binomial', nlam=100,
             'beta': beta,
             'best_lambda': best_lambda,
             'best_beta': beta[best_lambda_index],
-            'best_lambda_index': best_lambda_index
+            'best_lambda_index': best_lambda_index,
+            'selected_regressors_idx': selected_regressors_idx,
             }
