@@ -465,6 +465,52 @@ def legendre_matrix_create(x_lags, degree=3, a=0, b=1):
     return psi
 
 
+def chebyshev_polynomial(x, d):
+    """
+    This function calculates the Chebyshev polynomial of order n for the input x.
+    For degrees 2 and above, the function uses the recursive relation to calculate the polynomial.
+    
+    Args:
+        x (float): The input value.
+        d (int): The degree of the Chebyshev polynomial.
+
+    Returns:
+        float: The value of the Chebyshev polynomial at x for degree d.
+    """
+    if d == 0:
+        return 1
+    elif d == 1:
+        return x
+    else:
+        return 2 * x * chebyshev_polynomial(x, d-1) - chebyshev_polynomial(x, d-2)
+
+
+def chebyshev_matrix_create(x_lags, degree=3, a=0, b=1):
+    """
+    This function creates a matrix of Chebyshev polynomials for the input x_lags and degree.
+
+    Args:
+        x_lags (int): The number of lags.
+        degree (int): The degree of the Chebyshev polynomial. Default is 3.
+    
+    Returns:
+        numpy.ndarray: A matrix of Chebyshev polynomials for the given lags and degrees.
+    """
+    # Create list of equally spaced values between a and b for use in legendre polynomials
+    x_values = np.linspace(a, b, num=x_lags)
+    # Shift the x values to be between -1 and 1
+    x_values = 2 * x_values / (b - a) - ((b + a) / (b - a))
+    # Create matrix to store legendre polynomials
+    chebyshev_matrix = np.zeros((x_lags, degree))
+    psi = np.zeros((x_lags, degree))
+    # Calculate the Legendre polynomials for each x value and degree
+    for x in range(len(x_values)):
+        for n in range(degree):
+            chebyshev_matrix[x, n] = chebyshev_polynomial(x_values[x], n)
+            psi[x, n] = np.sqrt((2 * n + 1) / (b - a)) * chebyshev_matrix[x, n]
+    return psi
+
+
 def data_transform(Y, Y_date, X, X_date, x_lags, y_lags, horizon, weight_matrix=None, degree=3,
                    standardize=True):
     """
