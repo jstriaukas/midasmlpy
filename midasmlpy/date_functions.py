@@ -4,7 +4,6 @@ import numpy as np
 from datetime import datetime
 import calendar
 
-
 # Finds time difference between two given times
 # time input style: [year,month,day,hour,min,sec]
 def diff_time_mf(time1, time2, origin, units=None):
@@ -450,6 +449,7 @@ def legendre_matrix_create(x_lags, degree=3, a=0, b=1):
     Returns:
         numpy.ndarray: A matrix of Legendre polynomials for the given lags and degrees.
     """
+
     # Create list of equally spaced values between a and b for use in legendre polynomials
     x_values = np.linspace(a, b, num=x_lags)
     # Shift the x values to be between -1 and 1
@@ -532,6 +532,7 @@ def data_transform(Y, Y_date, X, X_date, x_lags, y_lags, horizon, weight_matrix=
     - dict: A dictionary containing the Y, X_tilde, and Y_lagged matrices
 
     """
+
     # Ensure data structure
     Y_date = Y_date.astype(str)
     Y = Y
