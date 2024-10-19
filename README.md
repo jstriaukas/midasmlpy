@@ -88,7 +88,7 @@ We recommend using the VS Code IDE for local development. After cloning this rep
    ```shell
    cd ../../..
    ```
-5. Then, to install the `midasmlpy` package for development, first ensure that you have (gfortran)[https://gcc.gnu.org/wiki/GFortran] installed. Then do the following instead in “editable” mode:
+5. Then, to install the `midasmlpy` package for development, first ensure that you have [gfortran](https://gcc.gnu.org/wiki/GFortran) installed. Then do the following instead in “editable” mode:
 
    ```shell
    pip install -e .
