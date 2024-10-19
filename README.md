@@ -73,7 +73,8 @@ We recommend using the VS Code IDE for local development. After cloning this rep
    ```shell
    cd midasmlpy/src/sparseglf90
    ```
-2. Compile the f90 code with `f2py`
+2. Delete the original "sparsegllog_module_1.pyf" file in that directory.
+3. Compile the f90 code with `f2py`
 
    ```shell
    python -m numpy.f2py spmatmul.f90 log_sgl_subfuns.f90 sgl_subfuns.f90 sparsegl.f90 sparsegllog.f90 -m sparsegllog_module -h sparsegllog_module_1.pyf
@@ -82,12 +83,12 @@ We recommend using the VS Code IDE for local development. After cloning this rep
    ```
 
    Please note that the above instructions are exactly the same as the ones at [midasmlpy/src/sparseglf90/README.md](midasmlpy/src/sparseglf90/README.md)
-3. Return to the root directory
+4. Return to the root directory
 
    ```shell
    cd ../../..
    ```
-4. Then, To install the `midasmlpy` package for development, do the following instead in “editable” mode:
+5. Then, to install the `midasmlpy` package for development, first ensure that you have (gfortran)[https://gcc.gnu.org/wiki/GFortran] installed. Then do the following instead in “editable” mode:
 
    ```shell
    pip install -e .
